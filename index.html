@@ -10,72 +10,121 @@
     <div class="game-container">
         <header>
             <h1>Relaxing Minesweeper</h1>
-        </header>
-        
-        <div class="game-controls">
+        </header>        <div class="game-controls">
             <div class="mines-counter">Mines: <span id="mines-counter">0</span></div>
             <div class="timer">Time: <span id="timer">0</span>s</div>
             <button id="new-game">New Game</button>
-        </div>
-          <div class="difficulty-selector">
-            <button class="difficulty" data-difficulty="easy">Easy</button>
-            <button class="difficulty" data-difficulty="medium">Medium</button>
-            <button class="difficulty" data-difficulty="hard">Hard</button>
-            <button id="custom-difficulty">Custom</button>
-        </div>
-        
-        <div class="game-options">
-            <div class="speedrun-toggle">
-                <label for="speedrun-toggle">Speedrun Mode</label>
-                <input type="checkbox" id="speedrun-toggle" checked>
-                <span class="info-icon" id="speedrun-info">i
-                    <span class="tooltip">
-                        In speedrun mode: <br>
-                        • Click on a number to reveal surrounding cells if correct mines are flagged <br>
-                        • Right-click on a number to auto-flag mines if surrounding cells can be determined
-                    </span>
-                </span>
+            <div class="difficulty-group">
+                <button class="difficulty" data-difficulty="easy">Easy</button>
+                <button class="difficulty" data-difficulty="medium">Medium</button>
+                <button class="difficulty" data-difficulty="hard">Hard</button>
+                <button id="custom-difficulty">Custom</button>
             </div>
-        </div>
-        
-    <div class="theme-selector">
-            <label for="theme">Theme:</label>
-            <select id="theme">
-                <option value="default">Default</option>
-                <option value="ocean">Ocean</option>
-                <option value="forest">Forest</option>
-                <option value="sunset">Sunset</option>
-                <option value="dark">Dark Mode</option>
-            </select>
-        </div>
-        
-        <div class="audio-controls">
-            <div class="sound-toggle">
-                <label for="sound-toggle">Sound:</label>
-                <input type="checkbox" id="sound-toggle" checked>
-            </div>
-            <div class="volume-control">
-                <label for="volume">Volume:</label>
-                <input type="range" id="volume" min="0" max="100" value="50">
-            </div>
-            <div class="background-audio">
-                <label for="background-audio">Background:</label>
-                <select id="background-audio">
-                    <option value="none">None</option>
-                    <option value="forest">Forest</option>
-                    <option value="rain">Rain</option>
-                    <option value="ocean">Ocean</option>
-                </select>
-            </div>
+            <button id="menu-button">Menu</button>
         </div>
         
         <div class="game-board-container">
             <div id="game-board"></div>
         </div>
+          <div id="menu-modal" class="modal">
+            <div class="modal-content menu-content">
+                <span class="close" id="menu-close">&times;</span>
+                <h2>Game Menu</h2>
+  
+                  <div class="menu-section">
+                    <h3>Game Options</h3>
+                    <div class="option-toggle">
+                        <label for="speedrun-toggle">Speedrun Mode</label>
+                        <input type="checkbox" id="speedrun-toggle" checked>
+                        <span class="info-icon" id="speedrun-info">i
+                            <span class="tooltip">
+                                In speedrun mode: <br>
+                                • Click on a number to reveal surrounding cells if correct mines are flagged <br>
+                                • Right-click on a number to auto-flag mines if surrounding cells can be determined
+                            </span>
+                        </span>
+                    </div>
+                </div>                <div class="menu-section">
+                    <h3>Controller Options</h3>
+                    <div class="option-group">
+                        <div class="control-action">
+                            <label>Reveal Cells:</label>
+                            <div class="button-select">
+                                <label><input type="radio" name="reveal" value="left" checked> Left Click</label>
+                                <label><input type="radio" name="reveal" value="right"> Right Click</label>
+                            </div>
+                        </div>
+                        
+                        <div class="control-action">
+                            <label>Place Flags:</label>
+                            <div class="button-select">
+                                <label><input type="radio" name="flag" value="left"> Left Click</label>
+                                <label><input type="radio" name="flag" value="right" checked> Right Click</label>
+                            </div>
+                        </div>
+                        
+                        <div class="control-action speedrun-control">
+                            <label>Chord (when number matches flags):</label>
+                            <div class="button-select">
+                                <label><input type="radio" name="chord" value="left" checked> Left Click</label>
+                                <label><input type="radio" name="chord" value="right"> Right Click</label>
+                                <label><input type="radio" name="chord" value="none"> Disabled</label>
+                            </div>
+                        </div>
+                        
+                        <div class="control-action speedrun-control">
+                            <label>Auto-flag (when possible):</label>
+                            <div class="button-select">
+                                <label><input type="radio" name="autoflag" value="left"> Left Click</label>
+                                <label><input type="radio" name="autoflag" value="right" checked> Right Click</label>
+                                <label><input type="radio" name="autoflag" value="none"> Disabled</label>
+                            </div>
+                        </div>
+                        
+                        <div class="info-box">
+                            <span class="info-icon">i</span>
+                            <span class="info-text">Chord and Auto-flag options require Speedrun Mode to be enabled</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="menu-section">
+                    <h3>Theme</h3>
+                    <select id="theme" class="full-width">
+                        <option value="default">Default</option>
+                        <option value="ocean">Ocean</option>
+                        <option value="forest">Forest</option>
+                        <option value="sunset">Sunset</option>
+                        <option value="dark">Dark Mode</option>
+                    </select>
+                </div>
+                
+                <div class="menu-section">
+                    <h3>Sound</h3>
+                    <div class="option-toggle">
+                        <label for="sound-toggle">Enable Sound</label>
+                        <input type="checkbox" id="sound-toggle" checked>
+                    </div>
+                    <div class="volume-control">
+                        <label for="volume">Volume:</label>
+                        <input type="range" id="volume" min="0" max="100" value="50" class="full-width">
+                    </div>
+                    <div class="background-audio">
+                        <label for="background-audio">Background:</label>
+                        <select id="background-audio" class="full-width">
+                            <option value="none">None</option>
+                            <option value="forest">Forest</option>
+                            <option value="rain">Rain</option>
+                            <option value="ocean">Ocean</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
         
-    <div id="custom-modal" class="modal">
+        <div id="custom-modal" class="modal">
             <div class="modal-content">
-                <span class="close">&times;</span>
+                <span class="close" id="custom-close">&times;</span>
                 <h2>Custom Game</h2>
                 <div>
                     <label for="width">Width:</label>
@@ -101,15 +150,15 @@
             </div>
         </div>
     </div>    <!-- Audio elements -->
-    <audio id="click-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-mouse-click-close-1113.mp3" preload="auto"></audio>
-    <audio id="flag-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-game-click-1114.mp3" preload="auto"></audio>
-    <audio id="win-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3" preload="auto"></audio>
-    <audio id="lose-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-funny-fail-low-tone-2878.mp3" preload="auto"></audio>
+    <audio id="click-sound" src="sounds/click.mp3" preload="auto"></audio>
+    <audio id="flag-sound" src="sounds/flag.mp3" preload="auto"></audio>
+    <audio id="win-sound" src="sounds/win.mp3" preload="auto"></audio>
+    <audio id="lose-sound" src="sounds/lose.mp3" preload="auto"></audio>
     
     <!-- Background audio -->
-    <audio id="forest-audio" src="https://assets.mixkit.co/sfx/preview/mixkit-forest-birds-ambience-1210.mp3" loop preload="auto"></audio>
-    <audio id="rain-audio" src="https://assets.mixkit.co/sfx/preview/mixkit-light-rain-loop-1249.mp3" loop preload="auto"></audio>
-    <audio id="ocean-audio" src="https://assets.mixkit.co/sfx/preview/mixkit-sea-waves-ambience-1189.mp3" loop preload="auto"></audio>
+    <audio id="forest-audio" src="sounds/forest.mp3" loop preload="auto"></audio>
+    <audio id="rain-audio" src="sounds/rain.mp3" loop preload="auto"></audio>
+    <audio id="ocean-audio" src="sounds/ocean.mp3" loop preload="auto"></audio>
     
     <script src="script.js"></script>
 </body>

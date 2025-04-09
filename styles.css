@@ -362,9 +362,126 @@ select {
     border-radius: 6px;
 }
 
-.result-content {
+.result-content, .menu-content {
     text-align: center;
     padding: 30px;
+}
+
+.menu-content {
+    max-width: 500px;
+    width: 90%;
+}
+
+.menu-section {
+    margin-bottom: 24px;
+    text-align: left;
+    border-bottom: 1px solid var(--cell-color);
+    padding-bottom: 16px;
+}
+
+.menu-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.menu-section h3 {
+    margin-bottom: 12px;
+    color: var(--accent-color);
+    font-size: 18px;
+}
+
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+}
+
+.menu-button {
+    min-width: calc(50% - 8px);
+    margin: 4px 0;
+    padding: 10px 0;
+}
+
+.option-toggle {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    justify-content: space-between;
+}
+
+.option-toggle label {
+    margin-right: auto;
+}
+
+.control-action {
+    margin-bottom: 16px;
+}
+
+.control-action label {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.button-select {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.button-select label {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--cell-color);
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.button-select label:hover {
+    background-color: var(--revealed-color);
+}
+
+.button-select input {
+    margin-right: 6px;
+}
+
+.speedrun-control.disabled {
+    opacity: 0.5;
+}
+
+.info-box {
+    background-color: rgba(var(--accent-rgb), 0.1);
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.info-icon {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--accent-color);
+    color: white;
+    font-style: italic;
+    font-weight: bold;
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+.info-text {
+    font-size: 14px;
+}
+
+.full-width {
+    width: 100%;
+    padding: 8px;
+    margin: 8px 0;
 }
 
 #result-message {

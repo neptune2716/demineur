@@ -41,6 +41,7 @@
 
 ### Gameplay Enhancements
 
+    Create real audio rather than placeholer
 - [ ] **Progressive Difficulty**
   - Start with easier boards and gradually increase difficulty
   - "Zen mode" that adapts difficulty based on your performance to maintain flow state

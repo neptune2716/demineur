@@ -11,6 +11,12 @@ let timerInterval;
 let flaggedMines = 0;
 let speedrunMode = true;
 
+// Controller settings
+let revealButton = "left";    // "left" or "right"
+let flagButton = "right";     // "left" or "right"
+let chordButton = "left";     // "left", "right", or "none"
+let autoFlagButton = "right"; // "left", "right", or "none"
+
 // Audio system variables
 let audioEnabled = true;
 let volumeLevel = 0.5;
@@ -32,9 +38,21 @@ const customModalElement = document.getElementById('custom-modal');
 
 // Initialize the game
 document.addEventListener('DOMContentLoaded', function() {
-    // Set up event listeners
+    // Menu control
+    document.getElementById('menu-button').addEventListener('click', function() {
+        playSound('click-sound');
+        document.getElementById('menu-modal').style.display = 'block';
+    });
+    
+    document.getElementById('menu-close').addEventListener('click', function() {
+        playSound('click-sound');
+        document.getElementById('menu-modal').style.display = 'none';
+    });
+    
+    // Game controls
     document.getElementById('new-game').addEventListener('click', function() {
         playSound('click-sound');
+        document.getElementById('menu-modal').style.display = 'none';
         initializeGame();
     });
     
@@ -43,12 +61,14 @@ document.addEventListener('DOMContentLoaded', function() {
             playSound('click-sound');
             const difficulty = this.dataset.difficulty;
             setDifficulty(difficulty);
+            document.getElementById('menu-modal').style.display = 'none';
             initializeGame();
         });
     });
     
     document.getElementById('custom-difficulty').addEventListener('click', function() {
         playSound('click-sound');
+        document.getElementById('menu-modal').style.display = 'none';
         openCustomModal();
     });
     
@@ -57,19 +77,83 @@ document.addEventListener('DOMContentLoaded', function() {
         startCustomGame();
     });
     
-    document.querySelector('.close').addEventListener('click', function() {
+    document.getElementById('custom-close').addEventListener('click', function() {
         playSound('click-sound');
         closeCustomModal();
     });
-      document.getElementById('theme').addEventListener('change', function() {
+    
+    document.getElementById('theme').addEventListener('change', function() {
         playSound('click-sound');
         setTheme(this.value);
     });
-    
-    // Speedrun mode toggle
+      // Speedrun mode toggle
     document.getElementById('speedrun-toggle').addEventListener('change', function() {
         speedrunMode = this.checked;
         localStorage.setItem('speedrunMode', speedrunMode);
+    });
+      // Controller options
+    document.querySelectorAll('input[name="reveal"]').forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.checked) {
+                revealButton = this.value;
+                // If both reveal and flag are set to the same button, switch the other one
+                if (revealButton === flagButton) {
+                    const newFlagButton = revealButton === "left" ? "right" : "left";
+                    flagButton = newFlagButton;
+                    document.querySelector(`input[name="flag"][value="${newFlagButton}"]`).checked = true;
+                }
+                localStorage.setItem('revealButton', revealButton);
+                localStorage.setItem('flagButton', flagButton);
+            }
+        });
+    });
+    
+    document.querySelectorAll('input[name="flag"]').forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.checked) {
+                flagButton = this.value;
+                // If both reveal and flag are set to the same button, switch the other one
+                if (flagButton === revealButton) {
+                    const newRevealButton = flagButton === "left" ? "right" : "left";
+                    revealButton = newRevealButton;
+                    document.querySelector(`input[name="reveal"][value="${newRevealButton}"]`).checked = true;
+                }
+                localStorage.setItem('flagButton', flagButton);
+                localStorage.setItem('revealButton', revealButton);
+            }
+        });
+    });
+    
+    document.querySelectorAll('input[name="chord"]').forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.checked) {
+                chordButton = this.value;
+                localStorage.setItem('chordButton', chordButton);
+            }
+        });
+    });
+    
+    document.querySelectorAll('input[name="autoflag"]').forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.checked) {
+                autoFlagButton = this.value;
+                localStorage.setItem('autoFlagButton', autoFlagButton);
+            }
+        });
+    });
+    
+    // Handle speedrun mode toggle - update UI elements
+    document.getElementById('speedrun-toggle').addEventListener('change', function() {
+        speedrunMode = this.checked;
+        localStorage.setItem('speedrunMode', speedrunMode);
+        
+        // Enable or disable speedrun-related controls
+        const speedrunControls = document.querySelectorAll('.speedrun-control');
+        speedrunControls.forEach(control => {
+            control.classList.toggle('disabled', !speedrunMode);
+            const inputs = control.querySelectorAll('input');
+            inputs.forEach(input => input.disabled = !speedrunMode);
+        });
     });
     
     // Audio controls
@@ -98,9 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
             playBackgroundAudio(currentBackgroundAudio);
         }
         localStorage.setItem('backgroundAudio', currentBackgroundAudio);
-    });
-    
-    // Load audio preferences
+    });    // Load audio preferences
     if (localStorage.getItem('audioEnabled') !== null) {
         audioEnabled = localStorage.getItem('audioEnabled') === 'true';
         document.getElementById('sound-toggle').checked = audioEnabled;
@@ -114,9 +196,41 @@ document.addEventListener('DOMContentLoaded', function() {
     if (localStorage.getItem('backgroundAudio')) {
         currentBackgroundAudio = localStorage.getItem('backgroundAudio');
         document.getElementById('background-audio').value = currentBackgroundAudio;
-        if (audioEnabled && currentBackgroundAudio !== 'none') {
-            playBackgroundAudio(currentBackgroundAudio);
-        }
+        // Don't auto-play audio on page load to avoid browser restrictions
+        // Background audio will be played when the user interacts with the game
+    }
+      // Load controller preferences
+    if (localStorage.getItem('revealButton')) {
+        revealButton = localStorage.getItem('revealButton');
+        document.querySelector(`input[name="reveal"][value="${revealButton}"]`).checked = true;
+    }
+    
+    if (localStorage.getItem('flagButton')) {
+        flagButton = localStorage.getItem('flagButton');
+        document.querySelector(`input[name="flag"][value="${flagButton}"]`).checked = true;
+    }
+    
+    if (localStorage.getItem('chordButton')) {
+        chordButton = localStorage.getItem('chordButton');
+        document.querySelector(`input[name="chord"][value="${chordButton}"]`).checked = true;
+    }
+    
+    if (localStorage.getItem('autoFlagButton')) {
+        autoFlagButton = localStorage.getItem('autoFlagButton');
+        document.querySelector(`input[name="autoflag"][value="${autoFlagButton}"]`).checked = true;
+    }
+    
+    if (localStorage.getItem('speedrunMode') !== null) {
+        speedrunMode = localStorage.getItem('speedrunMode') === 'true';
+        document.getElementById('speedrun-toggle').checked = speedrunMode;
+        
+        // Enable or disable speedrun-related controls
+        const speedrunControls = document.querySelectorAll('.speedrun-control');
+        speedrunControls.forEach(control => {
+            control.classList.toggle('disabled', !speedrunMode);
+            const inputs = control.querySelectorAll('input');
+            inputs.forEach(input => input.disabled = !speedrunMode);
+        });
     }
     
     // Initialize with default settings
@@ -223,9 +337,21 @@ function renderBoard() {
 // Handle left-click on cell
 function handleLeftClick(event) {
     if (!gameActive) return;
-    
+    handleMouseClick(event, "left");
+}
+
+// Handle right-click on cell
+function handleRightClick(event) {
+    event.preventDefault();
+    if (!gameActive) return;
+    handleMouseClick(event, "right");
+}
+
+// Unified mouse click handler that uses controller settings
+function handleMouseClick(event, button) {
     const x = parseInt(event.target.dataset.x);
     const y = parseInt(event.target.dataset.y);
+    const cell = gameBoard[y][x];
     
     // First click safety
     if (firstClick) {
@@ -234,44 +360,27 @@ function handleLeftClick(event) {
         startTimer();
     }
     
-    // Cannot click on flagged cells
-    if (gameBoard[y][x].isFlagged) return;
+    // Handle reveal action
+    if (button === revealButton && !cell.isFlagged) {
+        playSound('click-sound');
+        revealCell(x, y);
+    }
     
-    // Play click sound
-    playSound('click-sound');
+    // Handle flag action
+    if (button === flagButton && !cell.isRevealed) {
+        toggleFlag(x, y);
+    }
     
-    // Reveal cell
-    revealCell(x, y);
-    
-    // Check for number click (chord)
-    if (gameBoard[y][x].isRevealed && gameBoard[y][x].adjacentMines > 0) {
+    // Handle chord action (only in speedrun mode)
+    if (speedrunMode && button === chordButton && chordButton !== "none" && 
+        cell.isRevealed && cell.adjacentMines > 0) {
         handleNumberClick(x, y);
     }
-}
-
-// Handle right-click on cell
-function handleRightClick(event) {
-    event.preventDefault();
     
-    if (!gameActive) return;
-    
-    const x = parseInt(event.target.dataset.x);
-    const y = parseInt(event.target.dataset.y);
-    
-    // Start timer if this is the first action
-    if (firstClick) {
-        firstClick = false;
-        generateMines(x, y);
-        startTimer();
-    }
-    
-    // Toggle flag if cell is not revealed
-    if (!gameBoard[y][x].isRevealed) {
-        toggleFlag(x, y);
-    } 
-    // Right-click on number (auto-flag)
-    else if (gameBoard[y][x].adjacentMines > 0) {
-        handleRightClickNumber(x, y);
+    // Handle auto-flag action (only in speedrun mode)
+    if (speedrunMode && button === autoFlagButton && autoFlagButton !== "none" && 
+        cell.isRevealed && cell.adjacentMines > 0) {
+        handleAutoFlag(x, y);
     }
 }
 
@@ -442,12 +551,15 @@ function handleNumberClick(x, y) {
     }
 }
 
-// Handle right-click on a number (auto-flag)
-function handleRightClickNumber(x, y) {
+// Handle auto-flag on a number
+function handleAutoFlag(x, y) {
+    // Only handle this in speedrun mode
+    if (!speedrunMode) return;
+    
     const cell = gameBoard[y][x];
     if (!cell.isRevealed || cell.adjacentMines === 0) return;
     
-    // Count unrevealed cells and current flags
+    // Count only adjacent unrevealed cells and adjacent flagged cells
     let unrevealedCount = 0;
     let currentFlagged = 0;
     const unrevealedCells = [];
@@ -461,25 +573,21 @@ function handleRightClickNumber(x, y) {
             
             if (nx >= 0 && nx < columns && ny >= 0 && ny < rows) {
                 if (!gameBoard[ny][nx].isRevealed) {
-                    unrevealedCount++;
-                    unrevealedCells.push({ x: nx, y: ny });
-                }
-                if (gameBoard[ny][nx].isFlagged) {
-                    currentFlagged++;
+                    if (gameBoard[ny][nx].isFlagged) {
+                        currentFlagged++;
+                    } else {
+                        unrevealedCount++;
+                        unrevealedCells.push({ x: nx, y: ny });
+                    }
                 }
             }
         }
     }
     
-    // Auto-flag in two scenarios:
-    // 1. If unrevealed cells count matches remaining mines
-    // 2. If the number equals current flags + number of unrevealed cells
-    if (unrevealedCount === cell.adjacentMines - currentFlagged || 
-        cell.adjacentMines === currentFlagged + unrevealedCount) {
+    // Auto-flag when the number on the tile equals flags already placed + number of undiscovered adjacent tiles
+    if (cell.adjacentMines === currentFlagged + unrevealedCount && unrevealedCount > 0) {
         unrevealedCells.forEach(pos => {
-            if (!gameBoard[pos.y][pos.x].isFlagged) {
-                toggleFlag(pos.x, pos.y);
-            }
+            toggleFlag(pos.x, pos.y);
         });
     }
 }
