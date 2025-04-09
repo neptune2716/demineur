@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="particles-container" id="particles-container"></div>
     <div class="game-container">
         <header>
             <h1>Relaxing Minesweeper</h1>
@@ -86,9 +87,7 @@
                             <span class="info-text">Chord and Auto-flag options require Speedrun Mode to be enabled</span>
                         </div>
                     </div>
-                </div>
-                
-                <div class="menu-section">
+                </div>                <div class="menu-section">
                     <h3>Theme</h3>
                     <select id="theme" class="full-width">
                         <option value="default">Default</option>
@@ -96,7 +95,57 @@
                         <option value="forest">Forest</option>
                         <option value="sunset">Sunset</option>
                         <option value="dark">Dark Mode</option>
+                        <option value="night-sky">Night Sky</option>
+                        <option value="pastel">Pastel</option>
+                        <option value="japanese-garden">Japanese Garden</option>
+                        <option value="spring">Spring</option>
+                        <option value="summer">Summer</option>
+                        <option value="autumn">Autumn</option>
+                        <option value="winter">Winter</option>
+                        <option value="custom">Custom Colors</option>
                     </select>
+                    <div class="option-toggle" style="margin-top: 10px;">
+                        <label for="animated-bg">Animated Background</label>
+                        <input type="checkbox" id="animated-bg" checked>
+                    </div>
+                    
+                    <div id="color-customizer" class="color-customizer" style="display: none; margin-top: 15px;">
+                        <h4>Customize Colors</h4>
+                        <div class="color-option">
+                            <label for="custom-bg">Background</label>
+                            <input type="color" id="custom-bg" class="color-picker">
+                        </div>
+                        <div class="color-option">
+                            <label for="custom-board-bg">Board Background</label>
+                            <input type="color" id="custom-board-bg" class="color-picker">
+                        </div>
+                        <div class="color-option">
+                            <label for="custom-cell">Cell Color</label>
+                            <input type="color" id="custom-cell" class="color-picker">
+                        </div>
+                        <div class="color-option">
+                            <label for="custom-revealed">Revealed Cell</label>
+                            <input type="color" id="custom-revealed" class="color-picker">
+                        </div>
+                        <div class="color-option">
+                            <label for="custom-text">Text Color</label>
+                            <input type="color" id="custom-text" class="color-picker">
+                        </div>
+                        <div class="color-option">
+                            <label for="custom-accent">Accent Color</label>
+                            <input type="color" id="custom-accent" class="color-picker">
+                        </div>
+                        <div class="color-option">
+                            <label for="custom-mine">Mine Color</label>
+                            <input type="color" id="custom-mine" class="color-picker">
+                        </div>
+                        <div class="color-option">
+                            <label for="custom-flag">Flag Color</label>
+                            <input type="color" id="custom-flag" class="color-picker">
+                        </div>
+                        <button id="save-custom-colors" class="full-width" style="margin-top: 10px;">Save Custom Colors</button>
+                        <button id="reset-custom-colors" class="full-width">Reset to Default</button>
+                    </div>
                 </div>
                 
                 <div class="menu-section">
@@ -150,10 +199,10 @@
             </div>
         </div>
     </div>    <!-- Audio elements -->
-    <audio id="click-sound" src="sounds/click.mp3" preload="auto"></audio>
+    <audio id="click-sound" src="sounds/click.wav" preload="auto"></audio>
     <audio id="flag-sound" src="sounds/flag.mp3" preload="auto"></audio>
-    <audio id="win-sound" src="sounds/win.mp3" preload="auto"></audio>
-    <audio id="lose-sound" src="sounds/lose.mp3" preload="auto"></audio>
+    <audio id="win-sound" src="sounds/win.wav" preload="auto"></audio>
+    <audio id="lose-sound" src="sounds/lose.wav" preload="auto"></audio>
     
     <!-- Background audio -->
     <audio id="forest-audio" src="sounds/forest.mp3" loop preload="auto"></audio>

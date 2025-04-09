@@ -17,7 +17,57 @@ export const customModalElement = document.getElementById('custom-modal');
 export function setTheme(theme) {
     document.body.className = '';
     document.body.classList.add(`theme-${theme}`);
+    
+    // Check if animated background is enabled
+    if (localStorage.getItem('animatedBackground') === 'true') {
+        document.body.classList.add('animated-bg');
+    }
+    
     localStorage.setItem('theme', theme);
+    
+    // Update particles to match the theme
+    updateParticles();
+}
+
+// Create floating particles for the background
+export function createParticles() {
+    const container = document.getElementById('particles-container');
+    container.innerHTML = '';
+    
+    // Create different numbers of particles based on screen size
+    const particleCount = window.innerWidth < 600 ? 15 : 30;
+    
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        
+        // Randomize particle positions
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.top = `${Math.random() * 100}%`;
+        
+        // Add some random transformations
+        const randomScale = 0.5 + Math.random() * 1;
+        const randomOpacity = 0.3 + Math.random() * 0.7;
+        const randomDuration = 15 + Math.random() * 20;
+        
+        particle.style.transform = `scale(${randomScale})`;
+        particle.style.opacity = randomOpacity;
+        particle.style.animationDuration = `${randomDuration}s`;
+        
+        container.appendChild(particle);
+    }
+}
+
+// Update particles when theme changes
+export function updateParticles() {
+    // Only refresh particles when animation is enabled
+    if (localStorage.getItem('animatedBackground') !== 'true') return;
+    
+    // Remove existing particles
+    const container = document.getElementById('particles-container');
+    
+    // Create new particles with a slight delay to allow CSS variables to update
+    setTimeout(() => createParticles(), 100);
 }
 
 // Open custom game modal

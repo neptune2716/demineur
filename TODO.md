@@ -25,7 +25,7 @@
 
 - [x] **Audio System**
   - Soft click sounds for interactions
-  - Implemented calming background audio options (forest, rain, ocean)
+Implemented calming background audio options (forest, rain, ocean)
   - Volume controls and mute option
   - Sound effects for game actions (clicks, flags, wins, losses)
 
@@ -46,11 +46,14 @@
   - Tracks board state, timer, and all game settings
   - Clears saved game automatically when winning or losing
 
+- [x] **UI Improvements**
+  - Menu positioning improved (appears higher on screen)
+  - Reduced spacing between menu sections for a more compact design
+
 ## Core Ideas (Maintain relaxation focus)
 
 ### Gameplay Enhancements
 
-- [ ] Create real audio rather than placeholder files
 - [ ] **Progressive Difficulty**
   - Start with easier boards and gradually increase difficulty
   - "Zen mode" that adapts difficulty based on your performance to maintain flow state
@@ -61,22 +64,22 @@
   - Puzzles where all mines can be solved through pure logic (no guessing)
 
 ### Visual & Audio Enhancements
-- [ ] **Animation Improvements**
-  - Smoother transitions when revealing cells
-  - Gentle ripple effect when clicking
-  - Ambient particles floating in background matching current theme
+- [x] **Animation Improvements**
+  - ✓ Smoother transitions when revealing cells
+  - ✓ Gentle ripple effect when clicking
+  - ✓ Ambient particles floating in background matching current theme
 
-- [ ] **Audio Experience** 
-  - Soft click sounds for interactions
-  - Calming background music options (forest, rain, ocean, etc)
-  - Volume controls and mute option
-  - Gentle sound cues for important actions
+- [x] **Audio Experience** 
+  - ✓ Soft click sounds for interactions
+  - ✓ Calming background music options (forest, rain, ocean, etc)
+  - ✓ Volume controls and mute option
+  - ✓ Gentle sound cues for important actions (win, lose, click, flag)
 
-- [ ] **Enhanced Themes**
-  - More theme options (Night sky, Pastel, Japanese Garden, etc)
-  - Allow customization of individual colors
-  - Seasonal themes (Spring, Autumn, Winter, Summer)
-  - Animated backgrounds (subtle flowing patterns)
+- [x] **Enhanced Themes**
+  - ✓ More theme options (Night sky, Pastel, Japanese Garden, etc)
+  - ✓ Allow customization of individual colors
+  - ✓ Seasonal themes (Spring, Autumn, Winter, Summer)
+  - ✓ Animated backgrounds (subtle flowing patterns)
 
 ### Player Experience
 - [ ] **Statistics & Progress**

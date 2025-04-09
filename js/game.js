@@ -12,6 +12,8 @@ import { revealButton, flagButton, chordButton, autoFlagButton } from './control
 // Handle left-click on cell
 export function handleLeftClick(event) {
     if (!State.gameActive) return;
+    // Add ripple effect on click
+    addRippleEffect(event.target);
     handleMouseClick(event, "left");
     Storage.saveGameState();
 }
@@ -20,8 +22,29 @@ export function handleLeftClick(event) {
 export function handleRightClick(event) {
     event.preventDefault();
     if (!State.gameActive) return;
+    // Add ripple effect on right click
+    addRippleEffect(event.target);
     handleMouseClick(event, "right");
     Storage.saveGameState();
+}
+
+// Add ripple effect to cell
+function addRippleEffect(element) {
+    if (element.classList.contains('revealed')) return;
+    
+    // Reset animation by removing and re-adding class
+    element.classList.remove('ripple-effect');
+    
+    // Trigger browser reflow to restart animation
+    void element.offsetWidth;
+    
+    // Add class to start animation
+    element.classList.add('ripple-effect');
+    
+    // Remove class after animation completes
+    setTimeout(() => {
+        element.classList.remove('ripple-effect');
+    }, 600); // Match the duration in CSS
 }
 
 // Unified mouse click handler that uses controller settings
@@ -187,6 +210,9 @@ export function toggleFlag(x, y) {
         
         // Update mines counter
         UI.updateMinesCounter();
+        
+        // Check for win after flagging too
+        checkWinCondition();
     }
 }
 
@@ -268,8 +294,8 @@ export function handleAutoFlag(x, y) {
 
 // Check win condition
 export function checkWinCondition() {
-    // Win if all non-mine cells are revealed
-    if (State.cellsRevealed === (State.rows * State.columns - State.mineCount)) {
+    // Win if all non-mine cells are revealed AND all mines are flagged
+    if (State.cellsRevealed === (State.rows * State.columns - State.mineCount) && State.flaggedMines === State.mineCount) {
         gameOver(true);
     }
 }

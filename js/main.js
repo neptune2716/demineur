@@ -11,11 +11,15 @@ import * as Game from './game.js';
 import * as Audio from './audio.js';
 import * as Storage from './storage.js';
 import * as Controller from './controller.js';
+import * as ThemeCustomizer from './theme-customizer.js';
 
 // Initialize the game when DOM content is loaded
 document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     loadPreferences();
+    
+    // Initialize the theme customizer
+    ThemeCustomizer.initColorCustomizer();
     
     // Check for saved game state
     if (localStorage.getItem('hasSavedGame') === 'true') {
@@ -92,11 +96,26 @@ function setupEventListeners() {
         Audio.playSound('click-sound');
         UI.closeCustomModal();
     });
-    
-    document.getElementById('theme').addEventListener('change', function() {
+      document.getElementById('theme').addEventListener('change', function() {
         Audio.playSound('click-sound');
         UI.setTheme(this.value);
     });
+    
+    // Animated background toggle
+    document.getElementById('animated-bg').addEventListener('change', function() {
+        Audio.playSound('click-sound');
+        const isEnabled = this.checked;
+        localStorage.setItem('animatedBackground', isEnabled);
+        
+        if (isEnabled) {
+            document.body.classList.add('animated-bg');
+            UI.createParticles();
+        } else {
+            document.body.classList.remove('animated-bg');
+            document.getElementById('particles-container').innerHTML = '';
+        }
+    });
+    
       // Speedrun mode toggle
     document.getElementById('speedrun-toggle').addEventListener('change', function() {
         State.setSpeedrunMode(this.checked);
@@ -144,12 +163,28 @@ function loadPreferences() {
             inputs.forEach(input => input.disabled = !State.speedrunMode);
         });
     }
-    
-    // Apply saved theme if exists
+      // Apply saved theme if exists
     if (localStorage.getItem('theme')) {
         const savedTheme = localStorage.getItem('theme');
         document.getElementById('theme').value = savedTheme;
         UI.setTheme(savedTheme);
+    }
+    
+    // Check animated background preference
+    if (localStorage.getItem('animatedBackground') !== null) {
+        const animatedBg = localStorage.getItem('animatedBackground') === 'true';
+        document.getElementById('animated-bg').checked = animatedBg;
+        if (animatedBg) {
+            document.body.classList.add('animated-bg');
+            UI.createParticles();
+        } else {
+            document.body.classList.remove('animated-bg');
+        }
+    } else {
+        // Default to enabled
+        localStorage.setItem('animatedBackground', 'true');
+        document.body.classList.add('animated-bg');
+        UI.createParticles();
     }
 }
 
