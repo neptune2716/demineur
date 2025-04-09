@@ -16,24 +16,86 @@ const DEFAULT_STATS = {
         hard: null,
         custom: {}  // Will store best times for custom configurations as "rows_columns_mines"
     },
+    personalBests: {
+        easy: {
+            quickestWin: null,
+            mostRevealed: null,
+            leastMoves: null
+        },
+        medium: {
+            quickestWin: null,
+            mostRevealed: null,
+            leastMoves: null
+        },
+        hard: {
+            quickestWin: null,
+            mostRevealed: null,
+            leastMoves: null
+        },
+        custom: {}
+    },
+    gameHistory: {
+        easy: [],    // Array of { date: ISO string, time: seconds, result: 'won'|'lost' }
+        medium: [],
+        hard: [],
+        custom: {}   // Object with keys like "10_10_10" (rows_cols_mines) containing arrays of game records
+    },
     streaks: {
         current: 0,
         best: 0,
-        lastPlayed: null
+        lastPlayed: null,
+        dailyStreak: 0, // Number of consecutive days played
+        lastDayPlayed: null // To track which day was last played (YYYY-MM-DD)
     },
     achievements: {
+        // Win-based achievements
         firstWin: false,
         tenWins: false,
         fiftyWins: false,
         hundredWins: false,
-        perfectEasy: false,  // Win without flagging any wrong cells
+        
+        // Perfection achievements  
+        perfectEasy: false,      // Win without flagging any wrong cells
         perfectMedium: false,
         perfectHard: false,
+        
+        // Speed achievements
         speedRunnerEasy: false,  // Win under a time threshold
         speedRunnerMedium: false,
         speedRunnerHard: false,
-        weekStreak: false,  // Play for 7 consecutive days
-        monthStreak: false  // Play for 30 consecutive days
+        
+        // Streak achievements
+        weekStreak: false,       // Play for 7 consecutive days
+        monthStreak: false,      // Play for 30 consecutive days
+        
+        // Milestone achievements
+        hundredGames: false,     // Play 100 games
+        thousandGames: false,    // Play 1000 games
+        fiftyPercentWinRate: false, // Achieve 50% win rate after 20+ games
+        seventyFivePercentWinRate: false, // Achieve 75% win rate after 20+ games
+        
+        // Mastery achievements
+        easyMaster: false,      // Win easy difficulty 20 times
+        mediumMaster: false,    // Win medium difficulty 15 times
+        hardMaster: false       // Win hard difficulty 10 times
+    },
+    difficultyStats: {
+        easy: {
+            played: 0,
+            won: 0
+        },
+        medium: {
+            played: 0,
+            won: 0
+        },
+        hard: {
+            played: 0,
+            won: 0
+        },
+        custom: {
+            played: 0,
+            won: 0
+        }
     }
 };
 
@@ -84,9 +146,10 @@ export function saveStatistics() {
  * @param {number} time - Time taken in seconds
  * @param {string} difficulty - Game difficulty: 'easy', 'medium', 'hard', or 'custom'
  * @param {Object} gameConfig - Configuration for custom games { rows, columns, mines }
+ * @param {Object} gameStats - Additional game statistics { moves, cellsRevealed, wrongFlags }
  * @returns {Object} Updated achievement information
  */
-export function recordGameResult(isWin, time, difficulty, gameConfig = null) {
+export function recordGameResult(isWin, time, difficulty, gameConfig = null, gameStats = {}) {
     const stats = loadStatistics();
     const newAchievements = [];
     const now = new Date();
@@ -94,60 +157,155 @@ export function recordGameResult(isWin, time, difficulty, gameConfig = null) {
     
     // Update general game counts
     stats.games.played++;
-    if (isWin) {
+    
+    // Update difficulty-specific stats
+    if (stats.difficultyStats[difficulty]) {
+        stats.difficultyStats[difficulty].played++;
+        if (isWin) {
+            stats.difficultyStats[difficulty].won++;
+        }
+    }
+      if (isWin) {
         stats.games.won++;
+        // Increment win streak on a win
+        stats.streaks.current++;
     } else {
         stats.games.lost++;
+        // Reset win streak on a loss
+        stats.streaks.current = 0;
     }
-    
-    // Update streaks
+      
+    // Update daily play streak (separate from win streak)
     if (stats.streaks.lastPlayed) {
         const lastPlayed = new Date(stats.streaks.lastPlayed);
         const yesterday = new Date(now);
         yesterday.setDate(yesterday.getDate() - 1);
         
-        // Check if played on consecutive days
+        // Check if played on consecutive days (for daily streak achievement)
         const lastPlayedDate = lastPlayed.toISOString().split('T')[0];
         const yesterdayDate = yesterday.toISOString().split('T')[0];
         
-        if (lastPlayedDate === yesterdayDate || lastPlayedDate === today) {
-            stats.streaks.current++;
-        } else {
-            stats.streaks.current = 1; // Reset streak, but count today
+        // Only reset daily streak if not consecutive days
+        if (!(lastPlayedDate === yesterdayDate || lastPlayedDate === today)) {
+            stats.streaks.dailyStreak = 1;
         }
     } else {
         stats.streaks.current = 1; // First time playing
+    }
+    
+    // Update daily streaks for regular players
+    if (!stats.streaks.lastDayPlayed || stats.streaks.lastDayPlayed !== today) {
+        // Only update daily streak if it's a new day
+        if (stats.streaks.lastDayPlayed) {
+            const lastDay = new Date(stats.streaks.lastDayPlayed);
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayDate = yesterday.toISOString().split('T')[0];
+            
+            if (stats.streaks.lastDayPlayed === yesterdayDate) {
+                // Played yesterday, continue streak
+                stats.streaks.dailyStreak++;
+            } else {
+                // Didn't play yesterday, reset streak
+                stats.streaks.dailyStreak = 1;
+            }
+        } else {
+            stats.streaks.dailyStreak = 1; // First day playing
+        }
+        
+        // Update the last day played
+        stats.streaks.lastDayPlayed = today;
     }
     
     // Update best streak
     if (stats.streaks.current > stats.streaks.best) {
         stats.streaks.best = stats.streaks.current;
     }
-    
-    // Update last played date
+      // Update last played date
     stats.streaks.lastPlayed = now.toISOString();
+      // Record this game in history (only if it's a win)
+    if (isWin) {
+        const gameRecord = {
+            date: now.toISOString(),
+            time: time
+        };
+        
+        // Save to appropriate history section
+        if (difficulty === 'custom' && gameConfig) {
+            const customKey = `${gameConfig.rows}_${gameConfig.columns}_${gameConfig.mines}`;
+            if (!stats.gameHistory.custom[customKey]) {
+                stats.gameHistory.custom[customKey] = [];
+            }
+            stats.gameHistory.custom[customKey].push(gameRecord);
+        } else if (stats.gameHistory[difficulty]) {
+            stats.gameHistory[difficulty].push(gameRecord);
+        }
+    }
     
     // Only record times and check achievements for wins
     if (isWin) {
-    // Update best times
+        // Update best times
         if (difficulty === 'custom' && gameConfig) {
             const customKey = `${gameConfig.rows}_${gameConfig.columns}_${gameConfig.mines}`;
-            // Ensure the custom object exists
+            // Ensure the custom objects exist
             if (!stats.bestTimes.custom) {
                 stats.bestTimes.custom = {};
             }
+            if (!stats.personalBests.custom[customKey]) {
+                stats.personalBests.custom[customKey] = {
+                    quickestWin: null,
+                    mostRevealed: null,
+                    leastMoves: null
+                };
+            }
+            
+            // Update best time for custom game
             if (!stats.bestTimes.custom[customKey] || time < stats.bestTimes.custom[customKey]) {
                 stats.bestTimes.custom[customKey] = time;
                 console.log(`New best time for custom game: ${time}s`);
             }
+            
+            // Update personal bests for custom game
+            if (!stats.personalBests.custom[customKey].quickestWin || time < stats.personalBests.custom[customKey].quickestWin) {
+                stats.personalBests.custom[customKey].quickestWin = time;
+                newAchievements.push(`New personal best time for custom game: ${time}s`);
+            }
+            
+            if (gameStats.cellsRevealed && (!stats.personalBests.custom[customKey].mostRevealed || 
+                gameStats.cellsRevealed > stats.personalBests.custom[customKey].mostRevealed)) {
+                stats.personalBests.custom[customKey].mostRevealed = gameStats.cellsRevealed;
+            }
+            
+            if (gameStats.moves && (!stats.personalBests.custom[customKey].leastMoves || 
+                gameStats.moves < stats.personalBests.custom[customKey].leastMoves)) {
+                stats.personalBests.custom[customKey].leastMoves = gameStats.moves;
+            }
+            
         } else if (difficulty in stats.bestTimes) {
+            // Update best time for standard difficulty
             if (!stats.bestTimes[difficulty] || time < stats.bestTimes[difficulty]) {
                 stats.bestTimes[difficulty] = time;
                 console.log(`New best time for ${difficulty}: ${time}s`);
+                newAchievements.push(`New best time for ${difficulty}: ${time}s`);
+            }
+            
+            // Update personal bests for standard difficulty
+            if (!stats.personalBests[difficulty].quickestWin || time < stats.personalBests[difficulty].quickestWin) {
+                stats.personalBests[difficulty].quickestWin = time;
+            }
+            
+            if (gameStats.cellsRevealed && (!stats.personalBests[difficulty].mostRevealed || 
+                gameStats.cellsRevealed > stats.personalBests[difficulty].mostRevealed)) {
+                stats.personalBests[difficulty].mostRevealed = gameStats.cellsRevealed;
+            }
+            
+            if (gameStats.moves && (!stats.personalBests[difficulty].leastMoves || 
+                gameStats.moves < stats.personalBests[difficulty].leastMoves)) {
+                stats.personalBests[difficulty].leastMoves = gameStats.moves;
             }
         }
         
-        // Check achievements
+        // Check win-based achievements
         if (!stats.achievements.firstWin) {
             stats.achievements.firstWin = true;
             newAchievements.push('First Win');
@@ -168,6 +326,31 @@ export function recordGameResult(isWin, time, difficulty, gameConfig = null) {
             newAchievements.push('Hundred Wins');
         }
         
+        // Check difficulty mastery achievements
+        if (difficulty === 'easy' && stats.difficultyStats.easy.won >= 20 && !stats.achievements.easyMaster) {
+            stats.achievements.easyMaster = true;
+            newAchievements.push('Easy Master');
+        }
+        
+        if (difficulty === 'medium' && stats.difficultyStats.medium.won >= 15 && !stats.achievements.mediumMaster) {
+            stats.achievements.mediumMaster = true;
+            newAchievements.push('Medium Master');
+        }
+        
+        if (difficulty === 'hard' && stats.difficultyStats.hard.won >= 10 && !stats.achievements.hardMaster) {
+            stats.achievements.hardMaster = true;
+            newAchievements.push('Hard Master');
+        }
+        
+        // Check perfect game achievements (no wrong flags)
+        if (gameStats.wrongFlags === 0) {
+            const perfectKey = `perfect${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`;
+            if (difficulty !== 'custom' && !stats.achievements[perfectKey]) {
+                stats.achievements[perfectKey] = true;
+                newAchievements.push(`Perfect Game (${difficulty})`);
+            }
+        }
+        
         // Check speed achievements
         if (difficulty in SPEED_THRESHOLDS && time <= SPEED_THRESHOLDS[difficulty]) {
             const achievementKey = `speedRunner${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`;
@@ -177,16 +360,41 @@ export function recordGameResult(isWin, time, difficulty, gameConfig = null) {
             }
         }
     }
-    
-    // Check streak achievements
-    if (stats.streaks.current >= 7 && !stats.achievements.weekStreak) {
+      // Check streak achievements
+    if (stats.streaks.dailyStreak >= 7 && !stats.achievements.weekStreak) {
         stats.achievements.weekStreak = true;
         newAchievements.push('Week Streak');
     }
     
-    if (stats.streaks.current >= 30 && !stats.achievements.monthStreak) {
+    if (stats.streaks.dailyStreak >= 30 && !stats.achievements.monthStreak) {
         stats.achievements.monthStreak = true;
         newAchievements.push('Month Streak');
+    }
+    
+    // Check milestone achievements
+    if (stats.games.played >= 100 && !stats.achievements.hundredGames) {
+        stats.achievements.hundredGames = true;
+        newAchievements.push('100 Games Played');
+    }
+    
+    if (stats.games.played >= 1000 && !stats.achievements.thousandGames) {
+        stats.achievements.thousandGames = true;
+        newAchievements.push('1000 Games Played');
+    }
+    
+    // Check win rate achievements (only if played enough games)
+    if (stats.games.played >= 20) {
+        const winRate = (stats.games.won / stats.games.played) * 100;
+        
+        if (winRate >= 50 && !stats.achievements.fiftyPercentWinRate) {
+            stats.achievements.fiftyPercentWinRate = true;
+            newAchievements.push('50% Win Rate');
+        }
+        
+        if (winRate >= 75 && !stats.achievements.seventyFivePercentWinRate) {
+            stats.achievements.seventyFivePercentWinRate = true;
+            newAchievements.push('75% Win Rate');
+        }
     }
     
     // Save updated stats

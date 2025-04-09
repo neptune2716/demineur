@@ -7,6 +7,7 @@ import * as State from './state.js';
 import * as Audio from './audio.js';
 import * as Storage from './storage.js';
 import * as UI from './ui.js';
+import * as Config from './config.js';
 import { revealButton, flagButton, chordButton, autoFlagButton } from './controller.js';
 
 // Handle left-click on cell
@@ -333,6 +334,38 @@ export function gameOver(isWin) {
     
     // Clear saved game state
     Storage.clearSavedGame();
+    
+    // Record this game's result in statistics
+    import('./statistics.js').then(Statistics => {
+        // Get current difficulty name
+        let difficulty = 'custom';
+        for (const [diffName, config] of Object.entries(Config.difficulties)) {
+            if (config.rows === State.rows && 
+                config.columns === State.columns && 
+                config.mines === State.mineCount) {
+                difficulty = diffName;
+                break;
+            }
+        }
+
+        // Calculate game stats
+        const gameStats = {
+            cellsRevealed: State.cellsRevealed,
+            wrongFlags: document.querySelectorAll('.cell.flagged:not(.mine)').length
+        };
+
+        // Record the game result
+        Statistics.recordGameResult(
+            isWin, 
+            State.timer,
+            difficulty,
+            { rows: State.rows, columns: State.columns, mines: State.mineCount },
+            gameStats
+        );
+        
+        // Update statistics on the main page
+        UI.updateMainPageStats();
+    });
     
     // Show result modal
     UI.showResultModal(isWin, State.timer);

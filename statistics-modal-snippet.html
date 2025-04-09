@@ -1,0 +1,69 @@
+<!-- Statistics Modal HTML -->
+<div id="statistics-modal" class="modal">
+    <div class="modal-content statistics-content">
+        <span class="close" id="statistics-close">&times;</span>
+        <h2>Game Statistics</h2>
+
+        <div class="statistics-container">
+            <div class="statistics-section">
+                <h3>Overview</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Games Played</div>
+                        <div class="stat-value" id="games-played">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Games Won</div>
+                        <div class="stat-value" id="games-won">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Win Rate</div>
+                        <div class="stat-value" id="win-rate">0%</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Current Streak</div>
+                        <div class="stat-value" id="current-streak">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Best Streak</div>
+                        <div class="stat-value" id="best-streak">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Last Played</div>
+                        <div class="stat-value" id="last-played">Never</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="statistics-section">
+                <h3>Best Times</h3>
+                <div class="stats-grid best-times-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Easy</div>
+                        <div class="stat-value" id="best-time-easy">--</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Medium</div>
+                        <div class="stat-value" id="best-time-medium">--</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Hard</div>
+                        <div class="stat-value" id="best-time-hard">--</div>
+                    </div>
+                </div>
+                <div id="custom-best-times" class="custom-best-times">
+                    <!-- Custom game best times will be displayed here -->
+                </div>
+            </div>
+
+            <div class="statistics-section">
+                <h3>Achievements</h3>
+                <div id="achievements-list" class="achievements-list">
+                    <!-- Achievements will be displayed here -->
+                </div>
+            </div>
+        </div>
+
+        <button id="close-statistics" class="full-width">Close</button>
+    </div>
+</div>

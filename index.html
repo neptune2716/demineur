@@ -8,12 +8,20 @@
 </head>
 <body>
     <div class="particles-container" id="particles-container"></div>
-    <div class="game-container">
-        <header>
+    <div class="game-container">        <header>
             <h1>Relaxing Minesweeper</h1>
-        </header>        <div class="game-controls">
-            <div class="mines-counter">Mines: <span id="mines-counter">0</span></div>
-            <div class="timer">Time: <span id="timer">0</span>s</div>
+        </header>
+        
+        <!-- Game Info: Separated from controls -->
+        <div class="game-info-panel">
+            <div class="game-info-item mines-counter">Mines: <span id="mines-counter">0</span></div>
+            <div class="game-info-item timer">Time: <span id="timer">0</span>s</div>
+            <div class="game-info-item win-rate">Win Rate: <span id="main-win-rate">0%</span></div>
+            <div class="game-info-item current-streak">Streak: <span id="main-current-streak">0</span></div>
+        </div>
+
+        <!-- Game Controls: Buttons separated from info -->
+        <div class="game-controls">
             <button id="new-game">New Game</button>
             <div class="difficulty-group">
                 <button class="difficulty" data-difficulty="easy">Easy</button>
@@ -21,6 +29,7 @@
                 <button class="difficulty" data-difficulty="hard">Hard</button>
                 <button id="custom-difficulty">Custom</button>
             </div>
+            <button id="view-stats">Statistics</button>
             <button id="menu-button">Menu</button>
         </div>
         
@@ -147,8 +156,7 @@
                         <button id="reset-custom-colors" class="full-width">Reset to Default</button>
                     </div>
                 </div>
-                
-                <div class="menu-section">
+                  <div class="menu-section">
                     <h3>Sound</h3>
                     <div class="option-toggle">
                         <label for="sound-toggle">Enable Sound</label>
@@ -208,6 +216,78 @@
     <audio id="forest-audio" src="sounds/forest.mp3" loop preload="auto"></audio>
     <audio id="rain-audio" src="sounds/rain.mp3" loop preload="auto"></audio>
     <audio id="ocean-audio" src="sounds/ocean.mp3" loop preload="auto"></audio>
+    
+    <!-- Statistics Modal -->
+    <div id="statistics-modal" class="modal">
+        <div class="modal-content statistics-content">
+            <span class="close" id="statistics-close">&times;</span>
+            <h2>Game Statistics</h2>
+
+            <div class="statistics-container">
+                <div class="statistics-section">
+                    <h3>Overview</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Games Played</div>
+                            <div class="stat-value" id="games-played">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Games Won</div>
+                            <div class="stat-value" id="games-won">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Win Rate</div>
+                            <div class="stat-value" id="win-rate">0%</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Current Streak</div>
+                            <div class="stat-value" id="current-streak">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Best Streak</div>
+                            <div class="stat-value" id="best-streak">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Last Played</div>
+                            <div class="stat-value" id="last-played">Never</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="statistics-section">
+                    <h3>Best Times</h3>
+                    <div class="stats-grid best-times-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Easy</div>
+                            <div class="stat-value" id="best-time-easy">--</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Medium</div>
+                            <div class="stat-value" id="best-time-medium">--</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Hard</div>
+                            <div class="stat-value" id="best-time-hard">--</div>
+                        </div>
+                    </div>
+                    <div id="custom-best-times" class="custom-best-times">
+                        <!-- Custom game best times will be displayed here -->
+                    </div>
+                </div>
+
+                <div class="statistics-section">
+                    <h3>Achievements</h3>
+                    <div id="achievements-list" class="achievements-list">
+                        <!-- Achievements will be displayed here -->
+                    </div>
+                </div>            </div>
+
+            <div class="statistics-actions">
+                <button id="close-statistics" class="full-width">Close</button>
+                <button id="reset-statistics" class="full-width danger-button">Reset All Statistics</button>
+            </div>
+        </div>
+    </div>
       <script type="module" src="js/main.js"></script>
 </body>
 </html>

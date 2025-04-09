@@ -141,10 +141,31 @@ export function initializeGame() {
     minesCounterElement.textContent = State.mineCount;
     renderBoard();
     
+    // Update statistics on the main page
+    updateMainPageStats();
+    
     // Add active game visual indicator
     document.body.classList.add('game-active');
     
     return gameBoard;
+}
+
+// Update statistics on the main page
+export function updateMainPageStats() {
+    import('./statistics.js').then(Statistics => {
+        // Update win rate
+        const winRateElement = document.getElementById('main-win-rate');
+        if (winRateElement) {
+            winRateElement.textContent = `${Statistics.getWinRate()}%`;
+        }
+        
+        // Update streak
+        const streakElement = document.getElementById('main-current-streak');
+        if (streakElement) {
+            const streakInfo = Statistics.getStreakInfo();
+            streakElement.textContent = streakInfo.current;
+        }
+    });
 }
 
 // Render the game board

@@ -12,6 +12,7 @@ import * as Audio from './audio.js';
 import * as Storage from './storage.js';
 import * as Controller from './controller.js';
 import * as ThemeCustomizer from './theme-customizer.js';
+import * as StatisticsUI from './statistics-ui.js';
 
 // Initialize the game when DOM content is loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -21,6 +22,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize the theme customizer
     ThemeCustomizer.initColorCustomizer();
     
+    // Initialize statistics UI
+    StatisticsUI.initStatisticsUI();
+    
     // Check for saved game state
     if (localStorage.getItem('hasSavedGame') === 'true') {
         if (loadGameState()) {
@@ -28,7 +32,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Initialize with default settings
+    // Always set Easy mode as default when starting/refreshing the game
+    if (Config.difficulties['easy']) {
+        const { rows, columns, mines } = Config.difficulties['easy'];
+        State.setGameDimensions(rows, columns, mines);
+    }
+    
+    // Initialize with default settings (now including Easy mode dimensions)
     UI.initializeGame();
 });
 
