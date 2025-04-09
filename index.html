@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relaxing Minesweeper</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>Relaxing Minesweeper</h1>
+        </header>
+        
+        <div class="game-controls">
+            <div class="mines-counter">Mines: <span id="mines-counter">0</span></div>
+            <div class="timer">Time: <span id="timer">0</span>s</div>
+            <button id="new-game">New Game</button>
+        </div>
+          <div class="difficulty-selector">
+            <button class="difficulty" data-difficulty="easy">Easy</button>
+            <button class="difficulty" data-difficulty="medium">Medium</button>
+            <button class="difficulty" data-difficulty="hard">Hard</button>
+            <button id="custom-difficulty">Custom</button>
+        </div>
+        
+        <div class="game-options">
+            <div class="speedrun-toggle">
+                <label for="speedrun-toggle">Speedrun Mode</label>
+                <input type="checkbox" id="speedrun-toggle" checked>
+                <span class="info-icon" id="speedrun-info">i
+                    <span class="tooltip">
+                        In speedrun mode: <br>
+                        • Click on a number to reveal surrounding cells if correct mines are flagged <br>
+                        • Right-click on a number to auto-flag mines if surrounding cells can be determined
+                    </span>
+                </span>
+            </div>
+        </div>
+        
+    <div class="theme-selector">
+            <label for="theme">Theme:</label>
+            <select id="theme">
+                <option value="default">Default</option>
+                <option value="ocean">Ocean</option>
+                <option value="forest">Forest</option>
+                <option value="sunset">Sunset</option>
+                <option value="dark">Dark Mode</option>
+            </select>
+        </div>
+        
+        <div class="audio-controls">
+            <div class="sound-toggle">
+                <label for="sound-toggle">Sound:</label>
+                <input type="checkbox" id="sound-toggle" checked>
+            </div>
+            <div class="volume-control">
+                <label for="volume">Volume:</label>
+                <input type="range" id="volume" min="0" max="100" value="50">
+            </div>
+            <div class="background-audio">
+                <label for="background-audio">Background:</label>
+                <select id="background-audio">
+                    <option value="none">None</option>
+                    <option value="forest">Forest</option>
+                    <option value="rain">Rain</option>
+                    <option value="ocean">Ocean</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="game-board-container">
+            <div id="game-board"></div>
+        </div>
+        
+    <div id="custom-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Custom Game</h2>
+                <div>
+                    <label for="width">Width:</label>
+                    <input type="number" id="width" min="5" max="50" value="10">
+                </div>
+                <div>
+                    <label for="height">Height:</label>
+                    <input type="number" id="height" min="5" max="50" value="10">
+                </div>
+                <div>
+                    <label for="mines">Mines:</label>
+                    <input type="number" id="mines" min="1" value="10">
+                </div>
+                <button id="start-custom">Start</button>
+            </div>
+        </div>
+        
+        <div id="result-modal" class="modal">
+            <div class="modal-content result-content">
+                <div id="result-message"></div>
+                <div id="result-details"></div>
+                <button id="new-game-result">New Game</button>
+            </div>
+        </div>
+    </div>    <!-- Audio elements -->
+    <audio id="click-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-mouse-click-close-1113.mp3" preload="auto"></audio>
+    <audio id="flag-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-game-click-1114.mp3" preload="auto"></audio>
+    <audio id="win-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3" preload="auto"></audio>
+    <audio id="lose-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-funny-fail-low-tone-2878.mp3" preload="auto"></audio>
+    
+    <!-- Background audio -->
+    <audio id="forest-audio" src="https://assets.mixkit.co/sfx/preview/mixkit-forest-birds-ambience-1210.mp3" loop preload="auto"></audio>
+    <audio id="rain-audio" src="https://assets.mixkit.co/sfx/preview/mixkit-light-rain-loop-1249.mp3" loop preload="auto"></audio>
+    <audio id="ocean-audio" src="https://assets.mixkit.co/sfx/preview/mixkit-sea-waves-ambience-1189.mp3" loop preload="auto"></audio>
+    
+    <script src="script.js"></script>
+</body>
+</html>
