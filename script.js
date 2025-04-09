@@ -49,6 +49,25 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('menu-modal').style.display = 'none';
     });
     
+    // Close menus when clicking outside
+    window.addEventListener('click', function(event) {
+        const menuModal = document.getElementById('menu-modal');
+        const customModal = document.getElementById('custom-modal');
+        const resultModal = document.getElementById('result-modal');
+        
+        if (event.target === menuModal) {
+            playSound('click-sound');
+            menuModal.style.display = 'none';
+        } else if (event.target === customModal) {
+            playSound('click-sound');
+            customModal.style.display = 'none';
+        } else if (event.target === resultModal) {
+            playSound('click-sound');
+            resultModal.style.display = 'none';
+            initializeGame();
+        }
+    });
+    
     // Game controls
     document.getElementById('new-game').addEventListener('click', function() {
         playSound('click-sound');
@@ -233,6 +252,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Check for saved game state
+    if (localStorage.getItem('hasSavedGame') === 'true') {
+        if (loadGameState()) {
+            return;
+        }
+    }
+    
     // Initialize with default settings
     initializeGame();
 });
@@ -338,6 +364,7 @@ function renderBoard() {
 function handleLeftClick(event) {
     if (!gameActive) return;
     handleMouseClick(event, "left");
+    saveGameState();
 }
 
 // Handle right-click on cell
@@ -345,6 +372,7 @@ function handleRightClick(event) {
     event.preventDefault();
     if (!gameActive) return;
     handleMouseClick(event, "right");
+    saveGameState();
 }
 
 // Unified mouse click handler that uses controller settings
@@ -602,6 +630,7 @@ function startTimer() {
     timerInterval = setInterval(() => {
         timer++;
         timerElement.textContent = timer;
+        saveGameState();
     }, 1000);
 }
 
@@ -643,6 +672,9 @@ function gameOver(isWin) {
             }
         }
     }
+    
+    // Clear saved game state
+    clearSavedGame();
     
     // Show custom result modal instead of alert
     const resultModal = document.getElementById('result-modal');
@@ -708,6 +740,117 @@ function updateVolume() {
             sound.volume = volumeLevel;
         }
     });
+}
+
+// Save game state to localStorage
+function saveGameState() {
+    // Only save if game is active
+    if (!gameActive || firstClick) return;
+    
+    const gameState = {
+        board: gameBoard,
+        rows: rows,
+        columns: columns,
+        mineCount: mineCount,
+        cellsRevealed: cellsRevealed,
+        timer: timer,
+        flaggedMines: flaggedMines,
+        firstClick: false
+    };
+    
+    localStorage.setItem('savedGameState', JSON.stringify(gameState));
+    localStorage.setItem('hasSavedGame', 'true');
+}
+
+// Load game state from localStorage
+function loadGameState() {
+    const savedState = localStorage.getItem('savedGameState');
+    if (!savedState) return false;
+    
+    try {
+        const gameState = JSON.parse(savedState);
+        
+        // Restore game dimensions and state
+        rows = gameState.rows;
+        columns = gameState.columns;
+        mineCount = gameState.mineCount;
+        cellsRevealed = gameState.cellsRevealed;
+        timer = gameState.timer;
+        flaggedMines = gameState.flaggedMines;
+        firstClick = false;
+        gameActive = true;
+        
+        // Update CSS variables for grid
+        document.documentElement.style.setProperty('--rows', rows);
+        document.documentElement.style.setProperty('--columns', columns);
+        
+        // Restore the game board
+        gameBoard = gameState.board;
+        
+        // Update UI
+        minesCounterElement.textContent = mineCount - document.querySelectorAll('.cell.flagged').length;
+        timerElement.textContent = timer;
+        
+        // Render the board
+        renderSavedBoard();
+        
+        // Start timer
+        startTimer();
+        document.body.classList.add('game-active');
+        
+        return true;
+    } catch (error) {
+        console.error('Error loading saved game:', error);
+        return false;
+    }
+}
+
+// Render a saved game board
+function renderSavedBoard() {
+    // Clear previous board
+    gameBoardElement.innerHTML = '';
+    
+    // Create grid cells with saved state
+    for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < columns; x++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.x = x;
+            cell.dataset.y = y;
+            
+            const boardCell = gameBoard[y][x];
+            
+            // Restore cell appearance
+            if (boardCell.isRevealed) {
+                cell.classList.add('revealed');
+                
+                if (boardCell.adjacentMines > 0) {
+                    cell.textContent = boardCell.adjacentMines;
+                    cell.dataset.mines = boardCell.adjacentMines;
+                }
+                
+                if (boardCell.isMine) {
+                    cell.classList.add('mine');
+                }
+            }
+            
+            if (boardCell.isFlagged) {
+                cell.classList.add('flagged');
+            }
+            
+            // Add event listeners
+            cell.addEventListener('click', handleLeftClick);
+            cell.addEventListener('contextmenu', handleRightClick);
+            
+            gameBoardElement.appendChild(cell);
+        }
+    }
+}
+
+// Clear saved game
+function clearSavedGame() {
+    localStorage.removeItem('savedGameState');
+    localStorage.removeItem('hasSavedGame');
 }
 
 // Apply saved theme if exists

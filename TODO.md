@@ -36,12 +36,21 @@
 
 ## Current Issues Fixed
 
+- [x] **Close menus when clicking outside**
+  - All modals (menu, custom game, result screen) now close when clicking outside
+  - Improves user experience and interface intuitiveness
+
+- [x] **Save Game State**
+  - Automatic game state saving as you play
+  - Game resumes exactly where you left off when returning
+  - Tracks board state, timer, and all game settings
+  - Clears saved game automatically when winning or losing
 
 ## Core Ideas (Maintain relaxation focus)
 
 ### Gameplay Enhancements
 
-    Create real audio rather than placeholer
+- [ ] Create real audio rather than placeholder files
 - [ ] **Progressive Difficulty**
   - Start with easier boards and gradually increase difficulty
   - "Zen mode" that adapts difficulty based on your performance to maintain flow state
