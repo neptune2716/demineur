@@ -252,28 +252,24 @@ body::before {
     width: 10px;
     height: 10px;
     background-color: var(--animation-secondary);
-    animation-delay: 2s;
     animation-duration: 25s;
 }
 
 .particle:nth-child(3n) {
     width: 4px;
     height: 4px;
-    animation-delay: 5s;
     animation-duration: 20s;
 }
 
 .particle:nth-child(4n) {
     width: 8px;
     height: 8px;
-    animation-delay: 7s;
     animation-duration: 18s;
 }
 
 .particle:nth-child(5n) {
     width: 12px;
     height: 12px;
-    animation-delay: 9s;
     animation-duration: 22s;
 }
 

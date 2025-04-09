@@ -29,23 +29,34 @@ export function setTheme(theme) {
     updateParticles();
 }
 
+// Track animation frame for performance optimization
+let animationFrameId = null;
+let particlesInitialized = false;
+
 // Create floating particles for the background
 export function createParticles() {
+    if (localStorage.getItem('animatedBackground') !== 'true') return;
+    
     const container = document.getElementById('particles-container');
+    
+    // Clear existing particles and create new ones
     container.innerHTML = '';
+    particlesInitialized = true;
     
     // Create different numbers of particles based on screen size
-    const particleCount = window.innerWidth < 600 ? 15 : 30;
+    const particleCount = window.innerWidth < 600 ? 12 : 24;
+    
+    const fragment = document.createDocumentFragment();
     
     for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         particle.className = 'particle';
         
-        // Randomize particle positions
+        // Randomize particle positions for immediate animation
         particle.style.left = `${Math.random() * 100}%`;
         particle.style.top = `${Math.random() * 100}%`;
         
-        // Add some random transformations
+        // Add some random transformations but no delays
         const randomScale = 0.5 + Math.random() * 1;
         const randomOpacity = 0.3 + Math.random() * 0.7;
         const randomDuration = 15 + Math.random() * 20;
@@ -53,21 +64,36 @@ export function createParticles() {
         particle.style.transform = `scale(${randomScale})`;
         particle.style.opacity = randomOpacity;
         particle.style.animationDuration = `${randomDuration}s`;
+        // No animation delay - all particles start animating immediately
         
-        container.appendChild(particle);
+        fragment.appendChild(particle);
     }
+    
+    container.appendChild(fragment);
 }
 
 // Update particles when theme changes
 export function updateParticles() {
     // Only refresh particles when animation is enabled
-    if (localStorage.getItem('animatedBackground') !== 'true') return;
+    if (localStorage.getItem('animatedBackground') !== 'true') {
+        const container = document.getElementById('particles-container');
+        container.innerHTML = '';
+        particlesInitialized = false;
+        return;
+    }
     
-    // Remove existing particles
-    const container = document.getElementById('particles-container');
+    // Instead of recreating all particles, just mark them as needing initialization
+    particlesInitialized = false;
     
-    // Create new particles with a slight delay to allow CSS variables to update
-    setTimeout(() => createParticles(), 100);
+    // Use requestAnimationFrame for smoother updates
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+    }
+    
+    // Small delay to allow CSS variables to update, but using requestAnimationFrame for better performance
+    animationFrameId = requestAnimationFrame(() => {
+        createParticles();
+    });
 }
 
 // Open custom game modal
