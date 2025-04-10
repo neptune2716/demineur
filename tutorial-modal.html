@@ -1,0 +1,120 @@
+<!-- Tutorial Modal HTML -->
+<div id="tutorial-modal" class="modal">
+    <div class="modal-content tutorial-content">
+        <span class="close" id="tutorial-close">&times;</span>
+        <h2>Minesweeper Tutorial</h2>
+        
+        <div class="tutorial-navigation">
+            <button id="tutorial-prev" disabled>Previous</button>
+            <span id="tutorial-page-indicator">1/3</span>
+            <button id="tutorial-next">Next</button>
+        </div>
+
+        <div class="tutorial-container">
+            <!-- Tutorial pages -->
+            <div class="tutorial-page" id="tutorial-page-1" style="display: block;">
+                <h3>Basic Strategies</h3>
+                
+                <div class="tutorial-section">
+                    <h4>How to Play</h4>
+                    <p>The goal of Minesweeper is to uncover all cells that don't contain mines without detonating any mines.</p>
+                    <ul>
+                        <li>Left-click to reveal a cell</li>
+                        <li>Right-click to place a flag where you think a mine is located</li>
+                        <li>The numbers indicate how many mines are in the adjacent 8 cells</li>
+                    </ul>                    <div class="tutorial-image">
+                        <div class="placeholder-image" style="height: 300px; background-color: #f0f0f0; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 5px;">
+                            <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Basic Gameplay</div>
+                            <div style="font-size: 14px;">Left-click to reveal, Right-click to flag</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tutorial-section">
+                    <h4>First Click Strategy</h4>
+                    <p>Your first click is always safe! Try to click in the middle of the board to maximize your chances of revealing a large area.</p>
+                </div>
+                
+                <div class="tutorial-section">
+                    <h4>Using Numbers</h4>
+                    <p>If a revealed number matches the count of adjacent flagged cells, you can safely reveal all unflagged adjacent cells.</p>                    <div class="tutorial-image">
+                        <div class="placeholder-image" style="height: 300px; background-color: #f0f0f0; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 5px;">
+                            <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Using Numbers</div>
+                            <div style="font-size: 14px;">Numbers indicate adjacent mines</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tutorial-page" id="tutorial-page-2" style="display: none;">
+                <h3>Pattern Recognition</h3>
+                
+                <div class="tutorial-section">
+                    <h4>1-2-1 Pattern</h4>
+                    <p>When you see a 1-2-1 pattern in a row, the mines are often positioned diagonally.</p>                    <div class="tutorial-image">
+                        <div class="placeholder-image" style="height: 300px; background-color: #f0f0f0; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 5px;">
+                            <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">1-2-1 Pattern</div>
+                            <div style="font-size: 14px;">Mines are often positioned diagonally</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tutorial-section">
+                    <h4>Edge Patterns</h4>
+                    <p>Numbers along the edge of the board are especially useful, as they have fewer adjacent cells to consider.</p>                    <div class="tutorial-image">
+                        <div class="placeholder-image" style="height: 300px; background-color: #f0f0f0; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 5px;">
+                            <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Edge Pattern</div>
+                            <div style="font-size: 14px;">Edge numbers have fewer adjacent cells to consider</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tutorial-section">
+                    <h4>Common Patterns</h4>
+                    <p>Look for these common patterns to quickly identify mine positions:</p>                    <div class="tutorial-image">
+                        <div class="placeholder-image" style="height: 300px; background-color: #f0f0f0; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 5px;">
+                            <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Common Patterns</div>
+                            <div style="font-size: 14px;">Recognizable mine configurations you'll encounter</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tutorial-page" id="tutorial-page-3" style="display: none;">
+                <h3>Advanced Techniques</h3>
+                
+                <div class="tutorial-section">
+                    <h4>Probability Analysis</h4>
+                    <p>When you have multiple possibilities, analyze which cells have the lowest probability of containing a mine.</p>
+                </div>
+                
+                <div class="tutorial-section">
+                    <h4>Speedrun Mode Techniques</h4>
+                    <p>In Speedrun mode:</p>
+                    <ul>
+                        <li>Click on a number to reveal surrounding cells if the correct number of mines are flagged</li>
+                        <li>Right-click on a number to auto-flag mines if the correct number of cells remain unrevealed</li>
+                    </ul>
+                </div>
+                
+                <div class="tutorial-section">
+                    <h4>Board Analysis</h4>
+                    <p>Advanced players look at the entire board to find forced moves by analyzing overlapping number constraints.</p>                    <div class="tutorial-image">
+                        <div class="placeholder-image" style="height: 300px; background-color: #f0f0f0; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 5px;">
+                            <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Advanced Analysis</div>
+                            <div style="font-size: 14px;">Analyzing overlapping number constraints to find guaranteed moves</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tutorial-buttons">
+            <button id="skip-tutorial" class="full-width">Skip Tutorial</button>
+            <div class="checkbox-container">
+                <input type="checkbox" id="dont-show-again">
+                <label for="dont-show-again">Don't show on startup</label>
+            </div>
+        </div>
+    </div>
+</div>

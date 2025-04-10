@@ -38,11 +38,22 @@ export function initStatisticsUI() {
         Audio.playSound('click-sound');
         hideStatisticsModal();
     });
-    
-    document.getElementById('close-statistics').addEventListener('click', () => {
+      document.getElementById('close-statistics').addEventListener('click', () => {
         Audio.playSound('click-sound');
         hideStatisticsModal();
     });
+      // Tutorial button in statistics modal
+    const tutorialButton = document.getElementById('view-tutorial-from-stats');
+    if (tutorialButton) {
+        tutorialButton.addEventListener('click', () => {
+            Audio.playSound('click-sound');
+            hideStatisticsModal(); // Hide statistics modal first
+            // Use dynamic import to avoid circular dependency
+            import('./tutorial.js').then(module => {
+                module.openTutorial();
+            });
+        });
+    }
     
     // Reset statistics button
     document.getElementById('reset-statistics').addEventListener('click', () => {

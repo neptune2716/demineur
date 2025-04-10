@@ -13,17 +13,20 @@ import * as Storage from './storage.js';
 import * as Controller from './controller.js';
 import * as ThemeCustomizer from './theme-customizer.js';
 import * as StatisticsUI from './statistics-ui.js';
+import * as Tutorial from './tutorial.js';
 
 // Initialize the game when DOM content is loaded
 document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     loadPreferences();
-    
-    // Initialize the theme customizer
+      // Initialize the theme customizer
     ThemeCustomizer.initColorCustomizer();
     
     // Initialize statistics UI
     StatisticsUI.initStatisticsUI();
+    
+    // Initialize tutorial system
+    Tutorial.initTutorial();
     
     // Check for saved game state
     if (localStorage.getItem('hasSavedGame') === 'true') {
@@ -43,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Set up all event listeners for the game
-function setupEventListeners() {
+function setupEventListeners() {    
     // Menu control
     document.getElementById('menu-button').addEventListener('click', function() {
         Audio.playSound('click-sound');
@@ -54,18 +57,33 @@ function setupEventListeners() {
         Audio.playSound('click-sound');
         document.getElementById('menu-modal').style.display = 'none';
     });
+      // Tutorial button in menu
+    document.getElementById('open-tutorial-from-menu').addEventListener('click', function() {
+        Audio.playSound('click-sound');
+        document.getElementById('menu-modal').style.display = 'none'; // Close menu first
+        Tutorial.openTutorial();
+    });
+    
+    // Tutorial show on startup checkbox
+    document.getElementById('show-tutorial-startup').addEventListener('change', function() {
+        Audio.playSound('click-sound');
+        Storage.setItem('dontShowTutorial', !this.checked);
+    });
     
     // Close menus when clicking outside
     window.addEventListener('click', function(event) {
         const menuModal = document.getElementById('menu-modal');
         const customModal = document.getElementById('custom-modal');
         const resultModal = document.getElementById('result-modal');
+        const tutorialModal = document.getElementById('tutorial-modal');
         
         if (event.target === menuModal) {
             Audio.playSound('click-sound');
-            menuModal.style.display = 'none';
-        } else if (event.target === customModal) {
+            menuModal.style.display = 'none';        } else if (event.target === customModal) {
             Audio.playSound('click-sound');
+        } else if (event.target === tutorialModal) {
+            Audio.playSound('click-sound');
+            tutorialModal.style.display = 'none';
             customModal.style.display = 'none';
         } else if (event.target === resultModal) {
             Audio.playSound('click-sound');

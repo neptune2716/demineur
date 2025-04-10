@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/modals.css">
     <link rel="stylesheet" href="css/notifications.css">
+    <link rel="stylesheet" href="css/tutorial.css">
 </head>
 <body>
     <div class="particles-container" id="particles-container"></div>
@@ -33,21 +34,19 @@
                 <button class="difficulty" data-difficulty="medium">Medium</button>
                 <button class="difficulty" data-difficulty="hard">Hard</button>
                 <button id="custom-difficulty">Custom</button>
-            </div>
-            <button id="view-stats">Statistics</button>
-            <button id="menu-button">Menu</button>
+            </div>            <button id="view-stats">Statistics</button>
+            <button id="menu-button">Options</button>
         </div>
         
         <div class="game-board-container">
             <div id="game-board"></div>
         </div>
           <div id="menu-modal" class="modal">
-            <div class="modal-content menu-content">
-                <span class="close" id="menu-close">&times;</span>
-                <h2>Game Menu</h2>
+            <div class="modal-content menu-content">                <span class="close" id="menu-close">&times;</span>
+                <h2>Game Options</h2>
   
                   <div class="menu-section">
-                    <h3>Game Options</h3>
+                    <h3>Gameplay Settings</h3>
                     <div class="option-toggle">
                         <label for="speedrun-toggle">Speedrun Mode</label>
                         <input type="checkbox" id="speedrun-toggle" checked>
@@ -159,8 +158,15 @@
                         </div>
                         <button id="save-custom-colors" class="full-width" style="margin-top: 10px;">Save Custom Colors</button>
                         <button id="reset-custom-colors" class="full-width">Reset to Default</button>
+                    </div>                </div>
+                  <div class="menu-section">
+                    <h3>Tutorial & Help</h3>
+                    <button id="open-tutorial-from-menu" class="full-width">Open Tutorial</button>
+                    <div class="option-toggle" style="margin-top: 10px;">
+                        <label for="show-tutorial-startup">Show tutorial for new players</label>
+                        <input type="checkbox" id="show-tutorial-startup" checked>
                     </div>
-                </div>
+                  </div>
                   <div class="menu-section">
                     <h3>Sound</h3>
                     <div class="option-toggle">

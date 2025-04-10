@@ -23,6 +23,31 @@
     max-width: 80%;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
     animation: modalFadeIn 0.3s ease;
+    position: relative; /* Add positioning context for the close button */
+}
+
+/* Close button styling */
+.close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--accent-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.close:hover {
+    color: var(--text-color);
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
 }
 
 .modal-content div {
@@ -33,6 +58,7 @@
     text-align: center;
     margin-bottom: 20px;
     color: var(--accent-color);
+    padding-right: 25px; /* Make space for close button */
 }
 
 .modal-content input[type="number"] {

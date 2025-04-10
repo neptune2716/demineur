@@ -1,0 +1,140 @@
+/* Tutorial Modal Styles */
+.tutorial-content {
+    max-width: 900px;
+    width: 85%;
+    min-width: 650px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 25px;
+}
+
+.tutorial-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--accent-color);
+}
+
+#tutorial-page-indicator {
+    padding: 0 20px;
+    min-width: 60px;
+    text-align: center;
+    font-weight: bold;
+    color: var(--accent-color);
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 6px 15px;
+}
+
+.tutorial-container {
+    margin-bottom: 20px;
+}
+
+.tutorial-page {
+    animation: fadein 0.5s;
+}
+
+.tutorial-section {
+    margin-bottom: 25px;
+}
+
+.tutorial-section h4 {
+    margin-bottom: 10px;
+    color: var(--accent-color);
+}
+
+.tutorial-section p {
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.tutorial-section ul {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+.tutorial-section li {
+    margin-bottom: 5px;
+}
+
+.tutorial-image {
+    margin: 15px 0;
+    text-align: center;
+    border: 1px solid var(--cell-color);
+    padding: 10px;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.tutorial-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 3px;
+}
+
+.tutorial-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+}
+
+.checkbox-container input[type="checkbox"] {
+    margin: 0;
+}
+
+/* Animation for page transitions */
+@keyframes fadein {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .tutorial-content {
+        padding: 15px;
+    }
+    
+    .tutorial-navigation {
+        padding: 5px 0;
+    }
+    
+    .tutorial-section {
+        margin-bottom: 15px;
+    }
+}
+
+/* Tutorial button in game UI */
+.tutorial-button {
+    background-color: var(--accent-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.tutorial-button:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-2px);
+}
+
+.tutorial-button:active {
+    transform: translateY(0);
+}
+
+.tutorial-button i {
+    font-size: 18px;
+}
