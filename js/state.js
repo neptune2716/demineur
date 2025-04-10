@@ -17,6 +17,7 @@ export let timer = 0;
 export let timerInterval;
 export let flaggedMines = 0;
 export let speedrunMode = true;
+export let safeMode = false; // Prevent 50/50 chance situations
 export let difficulty = 'easy'; // Track current difficulty
 
 // State setter methods
@@ -30,6 +31,10 @@ export function setGameActive(value) {
 
 export function setSpeedrunMode(value) {
     speedrunMode = value;
+}
+
+export function setSafeMode(value) {
+    safeMode = value;
 }
 
 export function incrementCellsRevealed() {

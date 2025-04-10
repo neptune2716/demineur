@@ -222,24 +222,31 @@ export function recordGameResult(isWin, time, difficulty, gameConfig = null, gam
         stats.streaks.best = stats.streaks.current;
     }
       // Update last played date
-    stats.streaks.lastPlayed = now.toISOString();
-      // Record this game in history (only if it's a win)
+    stats.streaks.lastPlayed = now.toISOString();    // Record this game in history (only if it's a win)
     if (isWin) {
-        const gameRecord = {
-            date: now.toISOString(),
-            time: time
-        };
-        
-        // Save to appropriate history section
-        if (difficulty === 'custom' && gameConfig) {
-            const customKey = `${gameConfig.rows}_${gameConfig.columns}_${gameConfig.mines}`;
-            if (!stats.gameHistory.custom[customKey]) {
-                stats.gameHistory.custom[customKey] = [];
+        // Import State module to get current game modes
+        import('./state.js').then(State => {
+            const gameRecord = {
+                date: now.toISOString(),
+                time: time,
+                speedrunMode: State.speedrunMode,
+                safeMode: State.safeMode
+            };
+            
+            // Save to appropriate history section
+            if (difficulty === 'custom' && gameConfig) {
+                const customKey = `${gameConfig.rows}_${gameConfig.columns}_${gameConfig.mines}`;
+                if (!stats.gameHistory.custom[customKey]) {
+                    stats.gameHistory.custom[customKey] = [];
+                }
+                stats.gameHistory.custom[customKey].push(gameRecord);
+            } else if (stats.gameHistory[difficulty]) {
+                stats.gameHistory[difficulty].push(gameRecord);
             }
-            stats.gameHistory.custom[customKey].push(gameRecord);
-        } else if (stats.gameHistory[difficulty]) {
-            stats.gameHistory[difficulty].push(gameRecord);
-        }
+            
+            // Save the updated statistics
+            saveStatistics();
+        });
     }
     
     // Only record times and check achievements for wins

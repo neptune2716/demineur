@@ -191,6 +191,9 @@ export function initializeGame() {
     // Update difficulty indicator
     updateDifficultyIndicator();
     
+    // Update mode indicators
+    updateModeIndicators();
+    
     return gameBoard;
 }
 
@@ -279,6 +282,35 @@ export function updateDifficultyIndicator() {
         }
         
         difficultyLabel.textContent = difficultyText;
+    }
+}
+
+// Update mode indicators (Speedrun mode, Safe mode)
+export function updateModeIndicators() {
+    // Main menu indicators
+    const speedrunIndicator = document.getElementById('speedrun-indicator');
+    const safeIndicator = document.getElementById('safe-indicator');
+    
+    // In-game indicators
+    const inGameSpeedrun = document.getElementById('in-game-speedrun');
+    const inGameSafe = document.getElementById('in-game-safe');
+    
+    // Update speedrun indicators
+    if (State.speedrunMode) {
+        speedrunIndicator.classList.remove('disabled');
+        inGameSpeedrun.classList.remove('disabled');
+    } else {
+        speedrunIndicator.classList.add('disabled');
+        inGameSpeedrun.classList.add('disabled');
+    }
+    
+    // Update safe mode indicators
+    if (State.safeMode) {
+        safeIndicator.classList.remove('disabled');
+        inGameSafe.classList.remove('disabled');
+    } else {
+        safeIndicator.classList.add('disabled');
+        inGameSafe.classList.add('disabled');
     }
 }
 

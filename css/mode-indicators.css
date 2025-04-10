@@ -1,0 +1,71 @@
+/* Mode indicators styling */
+.game-modes-indicator {
+    display: flex;
+    margin-top: 10px;
+    justify-content: center;
+    gap: 10px;
+}
+
+.mode-indicator {
+    font-size: 0.8rem;
+    padding: 3px 8px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.mode-indicator:hover {
+    opacity: 1;
+}
+
+.mode-indicator.speedrun {
+    background-color: var(--accent-color, #ff6b6b);
+    color: white;
+}
+
+.mode-indicator.safe {
+    background-color: var(--secondary-accent, #4ecdc4);
+    color: white;
+}
+
+.mode-indicator.disabled {
+    display: none;
+}
+
+.mode-icon {
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+/* In-game mode indicators */
+.in-game-modes {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.in-game-mode-indicator {
+    font-size: 0.7rem;
+    padding: 2px 5px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.in-game-mode-indicator.speedrun {
+    background-color: var(--accent-color, #ff6b6b);
+    color: white;
+}
+
+.in-game-mode-indicator.safe {
+    background-color: var(--secondary-accent, #4ecdc4);
+    color: white;
+}
+
+.in-game-mode-indicator.disabled {
+    display: none;
+}

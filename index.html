@@ -8,11 +8,11 @@
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/modals.css">
-    <link rel="stylesheet" href="css/notifications.css">
+    <link rel="stylesheet" href="css/modals.css">    <link rel="stylesheet" href="css/notifications.css">
     <link rel="stylesheet" href="css/tutorial.css">
     <link rel="stylesheet" href="css/achievement-popup.css">
     <link rel="stylesheet" href="css/game-transitions.css">
+    <link rel="stylesheet" href="css/mode-indicators.css">
 </head>
 <body>
     <div class="particles-container" id="particles-container"></div>
@@ -28,10 +28,17 @@
                 <div class="difficulty-indicator">
                     <span id="current-difficulty-label">Easy</span>
                 </div>
-                <!-- Stats Overview -->
-                <div class="stats-overview">
+                <!-- Stats Overview -->                <div class="stats-overview">
                     <div class="game-info-item win-rate">Win Rate: <span id="main-win-rate">0%</span></div>
                     <div class="game-info-item current-streak">Streak: <span id="main-current-streak">0</span></div>
+                </div>
+                <div class="game-modes-indicator">
+                    <div id="speedrun-indicator" class="mode-indicator speedrun disabled">
+                        <span class="mode-icon">⚡</span>Speedrun
+                    </div>
+                    <div id="safe-indicator" class="mode-indicator safe disabled">
+                        <span class="mode-icon">🛡️</span>Safe Mode
+                    </div>
                 </div>
             </div>
 
@@ -46,8 +53,7 @@
                 <button id="view-stats">Statistics</button>
                 <button id="menu-button">Options</button>
             </div>
-        </div>        <!-- In-Game UI (initially hidden) -->
-        <div id="in-game-ui" class="in-game-ui">
+        </div>        <!-- In-Game UI (initially hidden) -->        <div id="in-game-ui" class="in-game-ui">
             <div class="game-info-panel">
                 <div class="game-info-item mines-counter">Mines: <span id="mines-counter">0</span></div>
                 <div class="in-game-controls">
@@ -55,6 +61,10 @@
                     <button id="pause-game">Pause</button>
                 </div>
                 <div class="game-info-item timer">Time: <span id="timer">0</span>s</div>
+                <div class="in-game-modes">
+                    <div id="in-game-speedrun" class="in-game-mode-indicator speedrun disabled">⚡</div>
+                    <div id="in-game-safe" class="in-game-mode-indicator safe disabled">🛡️</div>
+                </div>
             </div>
         </div>
         
@@ -74,9 +84,7 @@
         </div>
           <div id="menu-modal" class="modal">
             <div class="modal-content menu-content">                <span class="close" id="menu-close">&times;</span>
-                <h2>Game Options</h2>
-  
-                  <div class="menu-section">
+                <h2>Game Options</h2>                  <div class="menu-section">
                     <h3>Gameplay Settings</h3>
                     <div class="option-toggle">
                         <label for="speedrun-toggle">Speedrun Mode</label>
@@ -89,7 +97,18 @@
                             </span>
                         </span>
                     </div>
-                </div>                <div class="menu-section">
+                    <div class="option-toggle">
+                        <label for="safe-mode-toggle">Safe Mode</label>
+                        <input type="checkbox" id="safe-mode-toggle">
+                        <span class="info-icon" id="safe-mode-info">i
+                            <span class="tooltip">
+                                In safe mode: <br>
+                                • Prevents 50/50 chance situations <br>
+                                • Ensures all mines can be solved through logic without guessing
+                            </span>
+                        </span>
+                    </div>
+                </div> <div class="menu-section">
                     <h3>Controller Options</h3>
                     <div class="option-group">
                         <div class="control-action">

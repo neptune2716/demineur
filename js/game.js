@@ -9,6 +9,7 @@ import * as Storage from './storage.js';
 import * as UI from './ui.js';
 import * as Config from './config.js';
 import { revealButton, flagButton, chordButton, autoFlagButton } from './controller.js';
+import { generateSolvableBoard } from './safe-board.js';
 
 // Handle left-click on cell
 export function handleLeftClick(event) {
@@ -106,22 +107,57 @@ export function generateMines(safeX, safeY) {
         }
     }
     
-    // Place mines randomly
-    while (minesPlaced < State.mineCount) {
-        const x = Math.floor(Math.random() * State.columns);
-        const y = Math.floor(Math.random() * State.rows);
-        
-        // Check if position is not in safe zone and doesn't already have a mine
-        const isSafe = safeZone.some(pos => pos.x === x && pos.y === y);
-        
-        if (!isSafe && !State.gameBoard[y][x].isMine) {
-            State.gameBoard[y][x].isMine = true;
-            minesPlaced++;
+    if (State.safeMode) {
+        // In safe mode, we use a specialized algorithm to ensure a solvable board
+        generateSafeModeBoard(safeZone);
+    } else {
+        // Regular random mine placement
+        while (minesPlaced < State.mineCount) {
+            const x = Math.floor(Math.random() * State.columns);
+            const y = Math.floor(Math.random() * State.rows);
+            
+            // Check if position is not in safe zone and doesn't already have a mine
+            const isSafe = safeZone.some(pos => pos.x === x && pos.y === y);
+            
+            if (!isSafe && !State.gameBoard[y][x].isMine) {
+                State.gameBoard[y][x].isMine = true;
+                minesPlaced++;
+            }
         }
     }
     
     // Calculate adjacent mines for each cell
     calculateAdjacentMines();
+}
+
+// Generate a board that prevents 50/50 guessing situations (Safe Mode)
+function generateSafeModeBoard(safeZone) {
+    // Use the algorithm in safe-board.js to generate a solvable board
+    const success = generateSolvableBoard(safeZone);
+    
+    // If we failed to generate a solvable board after max attempts,
+    // fall back to standard board generation
+    if (!success) {
+        // Regular random mine placement
+        let minesPlaced = 0;
+        while (minesPlaced < State.mineCount) {
+            const x = Math.floor(Math.random() * State.columns);
+            const y = Math.floor(Math.random() * State.rows);
+            
+            // Check if position is not in safe zone and doesn't already have a mine
+            const isSafe = safeZone.some(pos => pos.x === x && pos.y === y);
+            
+            if (!isSafe && !State.gameBoard[y][x].isMine) {
+                State.gameBoard[y][x].isMine = true;
+                minesPlaced++;
+            }
+        }
+        
+        // Show notification that safe mode couldn't be guaranteed
+        import('./notification.js').then(Notification => {
+            Notification.showInfo("Couldn't guarantee a fully solvable board - some guessing may be required");
+        });
+    }
 }
 
 // Calculate number of adjacent mines for each cell

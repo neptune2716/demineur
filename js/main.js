@@ -52,15 +52,21 @@ function setupEventListeners() {
         Audio.playSound('click-sound');
         document.getElementById('menu-modal').style.display = 'block';
     });
-    
     document.getElementById('menu-close').addEventListener('click', function() {
         Audio.playSound('click-sound');
         document.getElementById('menu-modal').style.display = 'none';
+        // Update mode indicators when closing the menu
+        UI.updateModeIndicators();
+        
+        // Restore original state of toggles
+        resetToggleStates();
     });
-      // Tutorial button in menu
+    // Tutorial button in menu
     document.getElementById('open-tutorial-from-menu').addEventListener('click', function() {
         Audio.playSound('click-sound');
         document.getElementById('menu-modal').style.display = 'none'; // Close menu first
+        // Update mode indicators when closing menu to open tutorial
+        UI.updateModeIndicators();
         Tutorial.openTutorial();
     });
       // Tutorial show on startup checkbox
@@ -68,8 +74,7 @@ function setupEventListeners() {
         Audio.playSound('click-sound');
         localStorage.setItem('dontShowTutorial', !this.checked);
     });
-    
-    // Close menus when clicking outside
+      // Close menus when clicking outside
     window.addEventListener('click', function(event) {
         const menuModal = document.getElementById('menu-modal');
         const customModal = document.getElementById('custom-modal');
@@ -78,6 +83,8 @@ function setupEventListeners() {
           if (event.target === menuModal) {
             Audio.playSound('click-sound');
             menuModal.style.display = 'none';
+            // Update mode indicators when clicking outside to close
+            UI.updateModeIndicators();
         } else if (event.target === customModal) {
             Audio.playSound('click-sound');
             customModal.style.display = 'none';
@@ -117,9 +124,29 @@ function setupEventListeners() {
     document.getElementById('open-options-from-pause').addEventListener('click', function() {
         Audio.playSound('click-sound');
         UI.hidePauseMenu();
+        
+        // Disable safe mode and speedrun mode toggles when accessing from pause menu
+        const speedrunToggle = document.getElementById('speedrun-toggle');
+        const safeModeToggle = document.getElementById('safe-mode-toggle');
+        
+        // Store original state to restore when menu is closed
+        if (!speedrunToggle.hasAttribute('data-original-state')) {
+            speedrunToggle.setAttribute('data-original-state', speedrunToggle.disabled ? 'disabled' : 'enabled');
+            safeModeToggle.setAttribute('data-original-state', safeModeToggle.disabled ? 'disabled' : 'enabled');
+        }
+        
+        // Disable the toggles
+        speedrunToggle.disabled = true;
+        safeModeToggle.disabled = true;
+        
+        // Add a visual indication that they can't be changed during gameplay
+        speedrunToggle.parentElement.classList.add('in-game-disabled');
+        safeModeToggle.parentElement.classList.add('in-game-disabled');
+        
         document.getElementById('menu-modal').style.display = 'block';
     });
-      document.getElementById('quit-game').addEventListener('click', function() {
+    
+    document.getElementById('quit-game').addEventListener('click', function() {
         Audio.playSound('click-sound');
         UI.hidePauseMenu();
         // Reset to main screen and reinitialize the game
@@ -127,19 +154,21 @@ function setupEventListeners() {
         UI.initializeGame();
     });
     
-    document.querySelectorAll('.difficulty').forEach(button => {
-        button.addEventListener('click', function() {
+    document.querySelectorAll('.difficulty').forEach(button => {        button.addEventListener('click', function() {
             Audio.playSound('click-sound');
             const difficulty = this.dataset.difficulty;
             setDifficulty(difficulty);
             document.getElementById('menu-modal').style.display = 'none';
+            // Update mode indicators when closing menu via difficulty selection
+            UI.updateModeIndicators();
             UI.initializeGame();
         });
     });
-    
-    document.getElementById('custom-difficulty').addEventListener('click', function() {
+      document.getElementById('custom-difficulty').addEventListener('click', function() {
         Audio.playSound('click-sound');
         document.getElementById('menu-modal').style.display = 'none';
+        // Update mode indicators when closing menu to open custom modal
+        UI.updateModeIndicators();
         UI.openCustomModal();
     });
     
@@ -171,8 +200,7 @@ function setupEventListeners() {
             document.getElementById('particles-container').innerHTML = '';
         }
     });
-    
-      // Speedrun mode toggle
+        // Speedrun mode toggle
     document.getElementById('speedrun-toggle').addEventListener('change', function() {
         State.setSpeedrunMode(this.checked);
         localStorage.setItem('speedrunMode', State.speedrunMode);
@@ -184,6 +212,13 @@ function setupEventListeners() {
             const inputs = control.querySelectorAll('input');
             inputs.forEach(input => input.disabled = !State.speedrunMode);
         });
+    });
+    
+    // Safe mode toggle
+    document.getElementById('safe-mode-toggle').addEventListener('change', function() {
+        Audio.playSound('click-sound');
+        State.setSafeMode(this.checked);
+        localStorage.setItem('safeMode', State.safeMode);
     });
     
     // Controller setup
@@ -199,14 +234,34 @@ function setupEventListeners() {
     });
 }
 
+// Function to reset toggle states after closing the menu
+function resetToggleStates() {
+    const speedrunToggle = document.getElementById('speedrun-toggle');
+    const safeModeToggle = document.getElementById('safe-mode-toggle');
+    
+    // Only reset if data attributes exist
+    if (speedrunToggle.hasAttribute('data-original-state')) {
+        // Restore original disabled state
+        speedrunToggle.disabled = speedrunToggle.getAttribute('data-original-state') === 'disabled';
+        safeModeToggle.disabled = safeModeToggle.getAttribute('data-original-state') === 'disabled';
+        
+        // Remove the temporary attributes
+        speedrunToggle.removeAttribute('data-original-state');
+        safeModeToggle.removeAttribute('data-original-state');
+        
+        // Remove visual indication
+        speedrunToggle.parentElement.classList.remove('in-game-disabled');
+        safeModeToggle.parentElement.classList.remove('in-game-disabled');
+    }
+}
+
 // Load saved preferences from localStorage
 function loadPreferences() {
     // Load audio preferences
     Audio.loadAudioPreferences();
     
     // Load controller preferences
-    Controller.loadControllerSettings();
-      // Load speedrun mode preference
+    Controller.loadControllerSettings();    // Load speedrun mode preference
     if (localStorage.getItem('speedrunMode') !== null) {
         State.setSpeedrunMode(localStorage.getItem('speedrunMode') === 'true');
         document.getElementById('speedrun-toggle').checked = State.speedrunMode;
@@ -218,6 +273,12 @@ function loadPreferences() {
             const inputs = control.querySelectorAll('input');
             inputs.forEach(input => input.disabled = !State.speedrunMode);
         });
+    }
+    
+    // Load safe mode preference
+    if (localStorage.getItem('safeMode') !== null) {
+        State.setSafeMode(localStorage.getItem('safeMode') === 'true');
+        document.getElementById('safe-mode-toggle').checked = State.safeMode;
     }
       // Apply saved theme if exists
     if (localStorage.getItem('theme')) {

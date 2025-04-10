@@ -186,12 +186,54 @@ function updateStatisticsDisplay() {
  */
 function updateBestTimes(bestTimes) {
     // Update standard difficulties
+    const stats = Statistics.loadStatistics();
+    
     ['easy', 'medium', 'hard'].forEach(difficulty => {
         const time = bestTimes[difficulty];
         const element = document.getElementById(`best-time-${difficulty}`);
         
         if (time !== null) {
-            element.textContent = formatTime(time);
+            // Find the corresponding game record to check for speedrun/safe modes
+            let speedrunMode = false;
+            let safeMode = false;
+            
+            // Check in game history for this difficulty
+            if (stats.gameHistory && stats.gameHistory[difficulty]) {
+                // Find the game with the quickest time
+                const quickestGame = stats.gameHistory[difficulty].find(game => 
+                    game.time === time
+                );
+                
+                if (quickestGame) {
+                    speedrunMode = quickestGame.speedrunMode;
+                    safeMode = quickestGame.safeMode;
+                }
+            }
+            
+            // Create HTML with time and mode indicators
+            let timeDisplay = formatTime(time);
+            
+            // Create mode icons if either mode is enabled
+            if (speedrunMode || safeMode) {
+                element.innerHTML = timeDisplay;
+                
+                // Create and append mode indicators
+                if (speedrunMode) {
+                    const speedrunIndicator = document.createElement('span');
+                    speedrunIndicator.className = 'stat-mode-indicator speedrun';
+                    speedrunIndicator.textContent = '⚡';
+                    element.appendChild(speedrunIndicator);
+                }
+                
+                if (safeMode) {
+                    const safeIndicator = document.createElement('span');
+                    safeIndicator.className = 'stat-mode-indicator safe';
+                    safeIndicator.textContent = '🛡️';
+                    element.appendChild(safeIndicator);
+                }
+            } else {
+                element.textContent = timeDisplay;
+            }
         } else {
             element.textContent = '--';
         }
@@ -239,11 +281,11 @@ function showGameHistory(difficulty) {
         <span class="close" id="history-close">&times;</span>
         <h2>${difficultyName} Game History</h2>
         <div class="history-container">
-            <table class="history-table">
-                <thead>
+            <table class="history-table">                <thead>
                     <tr>
                         <th>Date</th>
                         <th>Time</th>
+                        <th>Mode</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -264,13 +306,22 @@ function showGameHistory(difficulty) {
             } else {
                 formattedDate = `${day} ${month} (${gameDate.getFullYear()})`;
             }
+              const time = formatTime(game.time);
             
-            const time = formatTime(game.time);
+            // Create mode indicators if they exist
+            let modeIcons = '';
+            if (game.speedrunMode) {
+                modeIcons += '<span class="history-mode-indicator speedrun">⚡</span>';
+            }
+            if (game.safeMode) {
+                modeIcons += '<span class="history-mode-indicator safe">🛡️</span>';
+            }
             
             historyContent += `
                 <tr>
                     <td>${formattedDate}</td>
                     <td>${time}</td>
+                    <td class="mode-icons">${modeIcons}</td>
                 </tr>
             `;
         });
@@ -334,6 +385,9 @@ function formatTime(seconds) {
  * @param {Object} personalBests - Personal bests object from statistics
  */
 function updatePersonalBests(personalBests) {
+    // Load statistics to access game history data
+    const stats = Statistics.loadStatistics();
+    
     // Check if we have the custom-best-times element
     const customBestTimesContainer = document.getElementById('custom-best-times');
     if (customBestTimesContainer) {
@@ -355,10 +409,38 @@ function updatePersonalBests(personalBests) {
             for (const [key, value] of sortedEntries) {
                 const [rows, columns, mines] = key.split('_');
                 const customItem = document.createElement('div');
-                customItem.className = 'custom-best-time-item';
+                customItem.className = 'custom-best-time-item';                // Find the corresponding game record to check for speedrun/safe modes
+                let speedrunMode = false;
+                let safeMode = false;
+                
+                // Check in game history for this configuration
+                if (stats.gameHistory && stats.gameHistory.custom && stats.gameHistory.custom[key]) {
+                    // Find the game with the quickest time
+                    const quickestGame = stats.gameHistory.custom[key].find(game => 
+                        game.time === value.quickestWin
+                    );
+                    
+                    if (quickestGame) {
+                        speedrunMode = quickestGame.speedrunMode;
+                        safeMode = quickestGame.safeMode;
+                    }
+                }
+                
+                // Create mode indicators
+                let modeIcons = '';
+                if (speedrunMode) {
+                    modeIcons += '<span class="stat-mode-indicator speedrun">⚡</span>';
+                }
+                if (safeMode) {
+                    modeIcons += '<span class="stat-mode-indicator safe">🛡️</span>';
+                }
+                
                 customItem.innerHTML = `
                     <span>${rows}×${columns}, ${mines} mines</span>
-                    <span>${formatTime(value.quickestWin)}</span>
+                    <div class="best-time-with-modes">
+                        <span>${formatTime(value.quickestWin)}</span>
+                        <span class="stat-mode-icons">${modeIcons}</span>
+                    </div>
                 `;
                 customBestTimesContainer.appendChild(customItem);
             }
