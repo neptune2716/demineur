@@ -126,8 +126,5 @@ Remember that all new features should enhance the core relaxing experience, not 
 
 
 Game info beaucoup trop hautes
-son a finir de regler
 
 quand je refresh la page, j'ai l'overlay du menu mais la game toujours en cour. Alors que je voudrais toujours etre dans l'overlay de ingame (bien sur si la game est lmancée), si je refresh dans le menu alors je dois rester dans le menu et pas dans l'overlay de ingame.
-
-game diffilculties indicator, don't take custom game into account, only the 3 levels of difficulty.

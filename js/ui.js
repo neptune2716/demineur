@@ -147,17 +147,18 @@ export function startCustomGame() {
     heightInput.value = rows;
     widthInput.value = columns;
     minesInput.value = mineCount;
-    
-    // Save custom settings to localStorage
+      // Save custom settings to localStorage
     const customSettings = {
         width: columns,
         height: rows,
         mines: mineCount
-    };
-    localStorage.setItem('customGameSettings', JSON.stringify(customSettings));
+    };    localStorage.setItem('customGameSettings', JSON.stringify(customSettings));
     
     // Set game dimensions and start the game
     State.setGameDimensions(rows, columns, mineCount);
+    
+    // Set difficulty to custom explicitly using the proper setter method
+    State.setDifficulty('custom');
     
     closeCustomModal();
     initializeGame();
@@ -259,6 +260,7 @@ export function updateDifficultyIndicator() {
     if (difficultyLabel) {
         let difficultyText = "";
         
+        // Show all difficulty levels including Custom
         switch(State.difficulty) {
             case 'easy':
                 difficultyText = "Easy";
@@ -270,10 +272,10 @@ export function updateDifficultyIndicator() {
                 difficultyText = "Hard";
                 break;
             case 'custom':
-                difficultyText = `Custom (${State.rows}×${State.columns}, ${State.mineCount} mines)`;
+                difficultyText = "Custom";
                 break;
             default:
-                difficultyText = "Easy";
+                difficultyText = "Custom";
         }
         
         difficultyLabel.textContent = difficultyText;
