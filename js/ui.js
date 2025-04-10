@@ -98,6 +98,16 @@ export function updateParticles() {
 
 // Open custom game modal
 export function openCustomModal() {
+    // Load saved custom settings if they exist
+    const savedCustomSettings = localStorage.getItem('customGameSettings');
+    
+    if (savedCustomSettings) {
+        const settings = JSON.parse(savedCustomSettings);
+        document.getElementById('width').value = settings.width;
+        document.getElementById('height').value = settings.height;
+        document.getElementById('mines').value = settings.mines;
+    }
+    
     customModalElement.style.display = 'block';
 }
 
@@ -112,14 +122,41 @@ export function startCustomGame() {
     const heightInput = document.getElementById('height');
     const minesInput = document.getElementById('mines');
     
-    const rows = Math.max(5, Math.min(50, parseInt(heightInput.value) || 10));
-    const columns = Math.max(5, Math.min(50, parseInt(widthInput.value) || 10));
-    const mineCount = Math.max(1, Math.min(rows * columns - 1, parseInt(minesInput.value) || 10));
+    const rows = Math.max(5, Math.min(100, parseInt(heightInput.value) || 10));
+    const columns = Math.max(5, Math.min(100, parseInt(widthInput.value) || 10));
     
+    // Calculate maximum mines allowed (20% of total tiles)
+    const totalTiles = rows * columns;
+    const maxAllowedMines = Math.floor(totalTiles * 0.2);
+    
+    // Get the requested mines and ensure it's within limits
+    let mineCount = Math.max(1, parseInt(minesInput.value) || 10);
+      // Check if mine count exceeds the 20% limit
+    if (mineCount > maxAllowedMines) {
+        // Show a custom warning notification instead of alert
+        import('./notification.js').then(Notification => {
+            Notification.showWarning(`Maximum mines allowed is ${maxAllowedMines} (20% of total tiles)`);
+        });
+        mineCount = maxAllowedMines;
+    }
+    
+    // Ensure we never exceed total tiles - 1 (need at least one safe cell)
+    mineCount = Math.min(mineCount, totalTiles - 1);
+    
+    // Update input values
     heightInput.value = rows;
     widthInput.value = columns;
     minesInput.value = mineCount;
     
+    // Save custom settings to localStorage
+    const customSettings = {
+        width: columns,
+        height: rows,
+        mines: mineCount
+    };
+    localStorage.setItem('customGameSettings', JSON.stringify(customSettings));
+    
+    // Set game dimensions and start the game
     State.setGameDimensions(rows, columns, mineCount);
     
     closeCustomModal();
@@ -172,6 +209,11 @@ export function updateMainPageStats() {
 export function renderBoard() {
     // Clear previous board
     gameBoardElement.innerHTML = '';
+    
+    // Calculate total cells and apply size class to the board for optimization
+    const totalCells = State.rows * State.columns;
+    gameBoardElement.dataset.boardSize = totalCells > 1000 ? 'large' : 
+                                         totalCells > 500 ? 'medium' : 'small';
     
     // Create grid cells
     for (let y = 0; y < State.rows; y++) {

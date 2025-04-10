@@ -52,13 +52,15 @@ export function initStatisticsUI() {
             import('./statistics.js').then(Statistics => {
                 Statistics.resetStatistics();
                 updateStatisticsDisplay();
-                
-                // Update the main page stats
+                  // Update the main page stats
                 import('./ui.js').then(UI => {
                     UI.updateMainPageStats();
                 });
                 
-                alert('Statistics have been reset successfully.');
+                // Replace alert with custom notification
+                import('./notification.js').then(Notification => {
+                    Notification.showSuccess('Statistics have been reset successfully.');
+                });
             });
         }
     });

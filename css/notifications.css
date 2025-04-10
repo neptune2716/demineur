@@ -1,0 +1,108 @@
+/* Custom notifications styling */
+
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    width: 300px;
+    max-width: 90vw;
+    pointer-events: none;
+}
+
+.notification {
+    background-color: var(--board-bg);
+    color: var(--text-color);
+    border: 2px solid var(--accent-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    padding: 16px;
+    margin-bottom: 12px;
+    transform: translateX(120%);
+    transition: transform 0.4s ease-out;
+    pointer-events: auto;
+    position: relative;
+    overflow: hidden;
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification.success {
+    border-color: #4caf50;
+}
+
+.notification.error {
+    border-color: var(--mine-color);
+}
+
+.notification.warning {
+    border-color: #ff9800;
+}
+
+.notification.info {
+    border-color: var(--accent-color);
+}
+
+.notification-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.notification-title .close-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0;
+    line-height: 1;
+}
+
+.notification-message {
+    font-size: 14px;
+}
+
+.notification-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.notification-progress::before {
+    content: '';
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    background-color: var(--accent-color);
+    transform-origin: left;
+    animation: progress 3s linear forwards;
+}
+
+.notification.success .notification-progress::before {
+    background-color: #4caf50;
+}
+
+.notification.error .notification-progress::before {
+    background-color: var(--mine-color);
+}
+
+.notification.warning .notification-progress::before {
+    background-color: #ff9800;
+}
+
+@keyframes progress {
+    0% {
+        transform: scaleX(1);
+    }
+    100% {
+        transform: scaleX(0);
+    }
+}

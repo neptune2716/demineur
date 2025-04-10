@@ -2,16 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relaxing Minesweeper</title>
-    <link rel="stylesheet" href="css/base.css">
+    <title>Relaxing Minesweeper</title>    <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/modals.css">
+    <link rel="stylesheet" href="css/notifications.css">
 </head>
 <body>
     <div class="particles-container" id="particles-container"></div>
+    <div class="notification-container" id="notification-container"></div>
     <div class="game-container">        <header>
             <h1>Relaxing Minesweeper</h1>
         </header>
@@ -189,11 +190,11 @@
                 <h2>Custom Game</h2>
                 <div>
                     <label for="width">Width:</label>
-                    <input type="number" id="width" min="5" max="50" value="10">
+                    <input type="number" id="width" min="5" max="500" value="10">
                 </div>
                 <div>
                     <label for="height">Height:</label>
-                    <input type="number" id="height" min="5" max="50" value="10">
+                    <input type="number" id="height" min="5" max="500" value="10">
                 </div>
                 <div>
                     <label for="mines">Mines:</label>

@@ -93,6 +93,21 @@ body::before {
     animation: revealCell var(--animation-speed) forwards;
 }
 
+/* Optimize animations for larger boards */
+[data-board-size="medium"] .cell.revealed:not(.animated) {
+    animation-duration: calc(var(--animation-speed) * 0.5);
+}
+
+[data-board-size="large"] .cell.revealed:not(.animated) {
+    animation: none;
+}
+
+/* When revealing large batches of cells, disable animations */
+.cell.revealed.batch-reveal {
+    animation: none;
+    background-color: var(--cell-revealed);
+}
+
 /* Ripple effect */
 .cell::after {
     content: '';

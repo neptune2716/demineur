@@ -132,12 +132,13 @@ function saveCustomColors() {
     const tempColors = localStorage.getItem('tempCustomColors');
     const currentColors = tempColors ? JSON.parse(tempColors) : collectCurrentCustomColors();
     
-    // Save to localStorage
-    localStorage.setItem('customColors', JSON.stringify(currentColors));
+    // Save to localStorage    localStorage.setItem('customColors', JSON.stringify(currentColors));
     localStorage.removeItem('tempCustomColors');
     
-    // Show confirmation
-    alert('Custom colors saved successfully!');
+    // Show confirmation with custom notification
+    import('./notification.js').then(Notification => {
+        Notification.showSuccess('Custom colors saved successfully!');
+    });
 }
 
 // Collect current custom colors from the color pickers

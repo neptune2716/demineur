@@ -103,7 +103,7 @@ Implemented calming background audio options (forest, rain, ocean)
   - Touch controls optimization
   - Pinch to zoom on larger boardsI
 
-- [ ] **Performance Optimizations**
+- [X] **Performance Optimizations**
   - Improve rendering for very large custom boards
   - Optimize animations for smoother experience
   - refacto the css

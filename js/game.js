@@ -146,34 +146,49 @@ export function calculateAdjacentMines() {
     }
 }
 
-// Reveal a cell
+// Track cells to be revealed in batches for optimization
+let cellsToReveal = [];
+let revealingBatch = false;
+const BATCH_THRESHOLD = 20; // Threshold after which we use batch mode
+
+// Reveal a cell with optimization for large boards
 export function revealCell(x, y) {
+    // For single cell reveals, use normal reveal process
+    if (!revealingBatch) {
+        // Start a new batch operation
+        cellsToReveal = [];
+        revealingBatch = true;
+        
+        // First collect all cells that need to be revealed
+        collectCellsToReveal(x, y);
+        
+        // Then apply the reveal to all collected cells
+        applyBatchReveal();
+        
+        // Reset batch state
+        revealingBatch = false;
+        
+        // Check for win condition once at the end
+        checkWinCondition();
+    } else {
+        // Already in a batch operation, just collect this cell
+        collectCellsToReveal(x, y);
+    }
+}
+
+// Collect all cells that need to be revealed in the current operation
+function collectCellsToReveal(x, y) {
     const cell = State.gameBoard[y][x];
     
-    // Skip if already revealed or flagged
-    if (cell.isRevealed || cell.isFlagged) return;
-      // Mark as revealed
-    cell.isRevealed = true;
-    State.incrementCellsRevealed();
+    // Skip if already revealed or flagged, or already in our collection
+    if (cell.isRevealed || cell.isFlagged || cell.toBeRevealed) return;
     
-    // Update UI
-    const cellElement = UI.getCellElement(x, y);
-    cellElement.classList.add('revealed');
+    // Mark for reveal
+    cell.toBeRevealed = true;
+    cellsToReveal.push({ x, y, cell });
     
-    // Handle mine click
-    if (cell.isMine) {
-        gameOver(false);
-        return;
-    }
-    
-    // Show number of adjacent mines
-    if (cell.adjacentMines > 0) {
-        cellElement.textContent = cell.adjacentMines;
-        cellElement.dataset.mines = cell.adjacentMines;
-    } 
-    // Auto-reveal surrounding cells for empty cells
-    else {
-        // Reveal all adjacent cells
+    // For empty cells, recursively collect adjacent cells
+    if (!cell.isMine && cell.adjacentMines === 0) {
         for (let dy = -1; dy <= 1; dy++) {
             for (let dx = -1; dx <= 1; dx++) {
                 if (dx === 0 && dy === 0) continue;
@@ -182,14 +197,76 @@ export function revealCell(x, y) {
                 const ny = y + dy;
                 
                 if (nx >= 0 && nx < State.columns && ny >= 0 && ny < State.rows) {
-                    revealCell(nx, ny);
+                    collectCellsToReveal(nx, ny);
                 }
             }
         }
     }
+}
+
+// Apply the reveal to all collected cells
+function applyBatchReveal() {
+    // Use different reveal strategies based on batch size
+    const batchSize = cellsToReveal.length;
+    const useBatchMode = batchSize > BATCH_THRESHOLD;
     
-    // Check for win
-    checkWinCondition();
+    // Check for game over first (if we hit a mine)
+    const hitMine = cellsToReveal.some(item => item.cell.isMine);
+    if (hitMine) {
+        // Just reveal the mine cell and trigger game over
+        const mineCell = cellsToReveal.find(item => item.cell.isMine);
+        
+        // Mark as revealed
+        mineCell.cell.isRevealed = true;
+        State.incrementCellsRevealed();
+        
+        // Update UI
+        const cellElement = UI.getCellElement(mineCell.x, mineCell.y);
+        cellElement.classList.add('revealed', 'animated');
+        
+        // Clean up temp property
+        cellsToReveal.forEach(item => delete item.cell.toBeRevealed);
+        
+        // Handle game over
+        gameOver(false);
+        return;
+    }
+    
+    // For very large batches, consider using document fragment or staggered reveals
+    if (useBatchMode) {
+        // Update data model first
+        cellsToReveal.forEach(item => {
+            item.cell.isRevealed = true;
+            State.incrementCellsRevealed();
+            delete item.cell.toBeRevealed;
+        });
+        
+        // Then batch update the DOM
+        cellsToReveal.forEach(item => {
+            const cellElement = UI.getCellElement(item.x, item.y);
+            cellElement.classList.add('revealed', 'batch-reveal');
+            
+            if (item.cell.adjacentMines > 0) {
+                cellElement.textContent = item.cell.adjacentMines;
+                cellElement.dataset.mines = item.cell.adjacentMines;
+            }
+        });
+    } else {
+        // For smaller batches, use normal animations
+        cellsToReveal.forEach(item => {
+            item.cell.isRevealed = true;
+            State.incrementCellsRevealed();
+            delete item.cell.toBeRevealed;
+            
+            const cellElement = UI.getCellElement(item.x, item.y);
+            cellElement.classList.add('revealed');
+            
+            if (item.cell.adjacentMines > 0) {
+                cellElement.textContent = item.cell.adjacentMines;
+                cellElement.dataset.mines = item.cell.adjacentMines;
+            }
+        });
+    }
 }
 
 // Toggle flag on a cell
