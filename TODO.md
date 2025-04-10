@@ -124,5 +124,5 @@ Remember that all new features should enhance the core relaxing experience, not 
 
 
 
-
+background music pas implementée
 Game info beaucoup trop hautes

@@ -41,21 +41,15 @@
     opacity: 0;
     transform: translateY(-20px);
     transition: opacity 0.5s ease, transform 0.5s ease;
-    position: absolute;
-    top: 0; /* Position at the top edge of the board instead of above it */
-    left: 0;
+    position: relative;
     z-index: 3;
     pointer-events: none;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-    padding: 5px 10px;
     width: 100%;
     box-sizing: border-box;
-    background-color: rgba(var(--board-bg-rgb), 0.8); /* Semi-transparent background */
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    height: 38px; /* Fixed height for the UI bar */
+    margin-bottom: 0;
 }
 
 .in-game-ui.active {
@@ -102,6 +96,9 @@
 .in-game-controls {
     display: flex;
     gap: 10px;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 5px;
 }
 
 /* Game board state */

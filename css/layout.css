@@ -16,14 +16,15 @@ header {
 /* Game info panel */
 .game-info-panel {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: center;
-    width: 100%;
-    margin-bottom: 15px;
-    padding: 12px;
-    background-color: var(--board-background);
-    border-radius: 8px;
-    box-shadow: 0 4px 6px var(--shadow-color);
+    width: calc(100% + 20px); /* Match the width of game board plus padding */
+    max-width: max-content;
+    margin-bottom: 5px; /* Reduced space between info panel and grid */
+    padding: 8px 10px;
+    background-color: transparent; /* Make panel background transparent */
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .game-info-item {
@@ -31,6 +32,7 @@ header {
     font-weight: bold;
     padding: 0 15px;
     text-align: center;
+    flex: 1;
 }
 
 .game-info-item span {
@@ -136,4 +138,18 @@ header {
     min-width: calc(50% - 8px);
     margin: 4px 0;
     padding: 10px 0;
+}
+
+/* In-game UI layout */
+.in-game-ui {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 0;
+}
+
+/* Position controls and info just above the game board */
+.game-board-container {
+    margin-top: 5px;
 }

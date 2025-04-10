@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relaxing Minesweeper</title>    <link rel="stylesheet" href="css/base.css">
+<head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relaxing Minesweeper</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/layout.css">
@@ -45,17 +46,15 @@
                 <button id="view-stats">Statistics</button>
                 <button id="menu-button">Options</button>
             </div>
-        </div>
-        
-        <!-- In-Game UI (initially hidden) -->
+        </div>        <!-- In-Game UI (initially hidden) -->
         <div id="in-game-ui" class="in-game-ui">
             <div class="game-info-panel">
                 <div class="game-info-item mines-counter">Mines: <span id="mines-counter">0</span></div>
+                <div class="in-game-controls">
+                    <button id="new-game-in-game">New Game</button>
+                    <button id="pause-game">Pause</button>
+                </div>
                 <div class="game-info-item timer">Time: <span id="timer">0</span>s</div>
-            </div>
-            <div class="in-game-controls">
-                <button id="new-game-in-game">New Game</button>
-                <button id="pause-game">Pause</button>
             </div>
         </div>
         
