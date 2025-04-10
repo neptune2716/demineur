@@ -18,7 +18,9 @@ export function saveGameState() {
         cellsRevealed: State.cellsRevealed,
         timer: State.timer,
         flaggedMines: State.flaggedMines,
-        firstClick: false
+        firstClick: false,
+        // Save UI state - whether we're in game playing mode or menu
+        inGameplayMode: document.body.classList.contains('game-playing')
     };
     
     localStorage.setItem('savedGameState', JSON.stringify(gameState));

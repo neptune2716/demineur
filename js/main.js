@@ -286,6 +286,15 @@ function loadGameState() {
         UI.startTimer();
         document.body.classList.add('game-active');
         
+        // Restore UI state (game playing or menu view)
+        if (gameState.inGameplayMode) {
+            // If we were in gameplay mode, transition to gameplay UI
+            UI.transitionToGameplay();
+        } else {
+            // If we were in menu mode, make sure we're in the main screen
+            UI.resetToMainScreen();
+        }
+        
         return true;
     } catch (error) {
         console.error('Error loading saved game:', error);
