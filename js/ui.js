@@ -184,7 +184,100 @@ export function initializeGame() {
     // Add active game visual indicator
     document.body.classList.add('game-active');
     
+    // Reset the game UI to main screen state
+    resetToMainScreen();
+    
+    // Update difficulty indicator
+    updateDifficultyIndicator();
+    
     return gameBoard;
+}
+
+/**
+ * Transition from the main screen to the gameplay view
+ */
+export function transitionToGameplay() {
+    // Add class to body for overall state
+    document.body.classList.add('game-playing');
+    
+    // Hide main screen elements
+    const mainScreen = document.getElementById('main-screen');
+    mainScreen.classList.add('hidden');
+    
+    // Center the game board
+    const gameBoard = document.querySelector('.game-board-container');
+    gameBoard.classList.add('centered');
+    
+    // Show in-game UI
+    const inGameUI = document.getElementById('in-game-ui');
+    setTimeout(() => {
+        inGameUI.classList.add('active');
+    }, 300); // Small delay for sequential animation
+}
+
+/**
+ * Reset UI to the main screen state
+ */
+export function resetToMainScreen() {
+    // Remove game-playing class
+    document.body.classList.remove('game-playing');
+    
+    // Show main screen elements
+    const mainScreen = document.getElementById('main-screen');
+    mainScreen.classList.remove('hidden');
+    
+    // Reset game board position
+    const gameBoard = document.querySelector('.game-board-container');
+    gameBoard.classList.remove('centered');
+    
+    // Hide in-game UI
+    const inGameUI = document.getElementById('in-game-ui');
+    inGameUI.classList.remove('active');
+}
+
+/**
+ * Show the pause menu
+ */
+export function showPauseMenu() {
+    const pauseMenu = document.getElementById('pause-menu');
+    pauseMenu.style.display = 'block';
+}
+
+/**
+ * Hide the pause menu
+ */
+export function hidePauseMenu() {
+    const pauseMenu = document.getElementById('pause-menu');
+    pauseMenu.style.display = 'none';
+}
+
+/**
+ * Update the difficulty indicator based on current difficulty
+ */
+export function updateDifficultyIndicator() {
+    const difficultyLabel = document.getElementById('current-difficulty-label');
+    if (difficultyLabel) {
+        let difficultyText = "";
+        
+        switch(State.difficulty) {
+            case 'easy':
+                difficultyText = "Easy";
+                break;
+            case 'medium':
+                difficultyText = "Medium";
+                break;
+            case 'hard':
+                difficultyText = "Hard";
+                break;
+            case 'custom':
+                difficultyText = `Custom (${State.rows}×${State.columns}, ${State.mineCount} mines)`;
+                break;
+            default:
+                difficultyText = "Easy";
+        }
+        
+        difficultyLabel.textContent = difficultyText;
+    }
 }
 
 // Update statistics on the main page

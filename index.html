@@ -7,39 +7,71 @@
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/modals.css">    <link rel="stylesheet" href="css/notifications.css">
+    <link rel="stylesheet" href="css/modals.css">
+    <link rel="stylesheet" href="css/notifications.css">
     <link rel="stylesheet" href="css/tutorial.css">
     <link rel="stylesheet" href="css/achievement-popup.css">
+    <link rel="stylesheet" href="css/game-transitions.css">
 </head>
 <body>
     <div class="particles-container" id="particles-container"></div>
     <div class="notification-container" id="notification-container"></div>
     <div class="game-container">        <header>
             <h1>Relaxing Minesweeper</h1>
-        </header>
+        </header> 
         
-        <!-- Game Info: Separated from controls -->
-        <div class="game-info-panel">
-            <div class="game-info-item mines-counter">Mines: <span id="mines-counter">0</span></div>
-            <div class="game-info-item timer">Time: <span id="timer">0</span>s</div>
-            <div class="game-info-item win-rate">Win Rate: <span id="main-win-rate">0%</span></div>
-            <div class="game-info-item current-streak">Streak: <span id="main-current-streak">0</span></div>
-        </div>
+        <!-- Main Screen UI -->
+        <div id="main-screen" class="main-screen active">
+            <!-- Difficulty Indicator -->
+            <div class="current-difficulty">
+                <div class="difficulty-indicator">
+                    <span id="current-difficulty-label">Easy</span>
+                </div>
+                <!-- Stats Overview -->
+                <div class="stats-overview">
+                    <div class="game-info-item win-rate">Win Rate: <span id="main-win-rate">0%</span></div>
+                    <div class="game-info-item current-streak">Streak: <span id="main-current-streak">0</span></div>
+                </div>
+            </div>
 
-        <!-- Game Controls: Buttons separated from info -->
-        <div class="game-controls">
-            <button id="new-game">New Game</button>
-            <div class="difficulty-group">
-                <button class="difficulty" data-difficulty="easy">Easy</button>
-                <button class="difficulty" data-difficulty="medium">Medium</button>
-                <button class="difficulty" data-difficulty="hard">Hard</button>
-                <button id="custom-difficulty">Custom</button>
-            </div>            <button id="view-stats">Statistics</button>
-            <button id="menu-button">Options</button>
+            <!-- Game Controls: Buttons for game setup -->
+            <div class="game-controls">
+                <div class="difficulty-group">
+                    <button class="difficulty" data-difficulty="easy">Easy</button>
+                    <button class="difficulty" data-difficulty="medium">Medium</button>
+                    <button class="difficulty" data-difficulty="hard">Hard</button>
+                    <button id="custom-difficulty">Custom</button>
+                </div>
+                <button id="view-stats">Statistics</button>
+                <button id="menu-button">Options</button>
+            </div>
+        </div>
+        
+        <!-- In-Game UI (initially hidden) -->
+        <div id="in-game-ui" class="in-game-ui">
+            <div class="game-info-panel">
+                <div class="game-info-item mines-counter">Mines: <span id="mines-counter">0</span></div>
+                <div class="game-info-item timer">Time: <span id="timer">0</span>s</div>
+            </div>
+            <div class="in-game-controls">
+                <button id="new-game-in-game">New Game</button>
+                <button id="pause-game">Pause</button>
+            </div>
         </div>
         
         <div class="game-board-container">
             <div id="game-board"></div>
+        </div>
+        
+        <!-- Pause Menu (initially hidden) -->
+        <div id="pause-menu" class="modal">
+            <div class="modal-content pause-content">
+                <span class="close" id="pause-close">&times;</span>
+                <h2>Game Paused</h2>
+                <button id="resume-game" class="full-width">Resume Game</button>
+                <button id="open-options-from-pause" class="full-width">Options</button>
+                <button id="quit-game" class="full-width">Quit Game</button>
+            </div>
         </div>
           <div id="menu-modal" class="modal">
             <div class="modal-content menu-content">                <span class="close" id="menu-close">&times;</span>

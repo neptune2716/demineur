@@ -17,6 +17,7 @@ export let timer = 0;
 export let timerInterval;
 export let flaggedMines = 0;
 export let speedrunMode = true;
+export let difficulty = 'easy'; // Track current difficulty
 
 // State setter methods
 export function setFirstClick(value) {
@@ -61,6 +62,10 @@ export function decrementFlaggedMines() {
 
 export function setGameBoard(board) {
     gameBoard = board;
+}
+
+export function setDifficulty(value) {
+    difficulty = value;
 }
 
 export function setTimerInterval(interval) {

@@ -58,6 +58,18 @@ export function handleMouseClick(event, button) {
         State.setFirstClick(false);
         generateMines(x, y);
         UI.startTimer();
+        
+        // Transition to game playing state
+        UI.transitionToGameplay();
+    }
+    
+    // Handle auto-flag action first (only in speedrun mode)
+    // This needs to be handled before other actions to prevent click sound
+    if (State.speedrunMode && button === autoFlagButton && autoFlagButton !== "none" && 
+        cell.isRevealed && cell.adjacentMines > 0) {
+        // Don't play any sound here - we'll directly handle sounds in the flag function
+        handleAutoFlag(x, y, true); // Pass true to indicate this is from auto-flag
+        return; // Exit early to avoid playing click sound
     }
     
     // Handle reveal action
@@ -75,12 +87,6 @@ export function handleMouseClick(event, button) {
     if (State.speedrunMode && button === chordButton && chordButton !== "none" && 
         cell.isRevealed && cell.adjacentMines > 0) {
         handleNumberClick(x, y);
-    }
-    
-    // Handle auto-flag action (only in speedrun mode)
-    if (State.speedrunMode && button === autoFlagButton && autoFlagButton !== "none" && 
-        cell.isRevealed && cell.adjacentMines > 0) {
-        handleAutoFlag(x, y);
     }
 }
 
@@ -270,7 +276,7 @@ function applyBatchReveal() {
 }
 
 // Toggle flag on a cell
-export function toggleFlag(x, y) {
+export function toggleFlag(x, y, skipSound = false) {
     const cell = State.gameBoard[y][x];
     
     if (!cell.isRevealed) {
@@ -279,11 +285,11 @@ export function toggleFlag(x, y) {
           if (cell.isFlagged) {
             cellElement.classList.add('flagged');
             if (cell.isMine) State.incrementFlaggedMines();
-            Audio.playSound('flag-sound');
+            if (!skipSound) Audio.playSound('flag-sound');
         } else {
             cellElement.classList.remove('flagged');
             if (cell.isMine) State.decrementFlaggedMines();
-            Audio.playSound('flag-sound');
+            if (!skipSound) Audio.playSound('flag-sound');
         }
         
         // Update mines counter
@@ -330,7 +336,7 @@ export function handleNumberClick(x, y) {
 }
 
 // Handle auto-flag on a number
-export function handleAutoFlag(x, y) {
+export function handleAutoFlag(x, y, isAutoFlagAction = false) {
     // Only handle this in speedrun mode
     if (!State.speedrunMode) return;
     
@@ -341,6 +347,7 @@ export function handleAutoFlag(x, y) {
     let unrevealedCount = 0;
     let currentFlagged = 0;
     const unrevealedCells = [];
+    const flaggedCells = [];
     
     for (let dy = -1; dy <= 1; dy++) {
         for (let dx = -1; dx <= 1; dx++) {
@@ -353,21 +360,44 @@ export function handleAutoFlag(x, y) {
                 if (!State.gameBoard[ny][nx].isRevealed) {
                     if (State.gameBoard[ny][nx].isFlagged) {
                         currentFlagged++;
+                        flaggedCells.push({ x: nx, y: ny });
                     } else {
                         unrevealedCount++;
                         unrevealedCells.push({ x: nx, y: ny });
                     }
                 }
             }
+        }    }    
+    
+    // Case 1: Auto-flag when the number on the tile equals flags already placed + number of undiscovered adjacent tiles
+    if (cell.adjacentMines === currentFlagged + unrevealedCount && unrevealedCount > 0) {
+        // Play the flag sound once for the entire operation
+        if (isAutoFlagAction) {
+            Audio.playSound('flag-sound');
         }
+        
+        unrevealedCells.forEach(pos => {
+            // Skip all sounds for each individual flag during auto-flagging
+            toggleFlag(pos.x, pos.y, true);
+        });
+        return true; // Operation performed
     }
     
-    // Auto-flag when the number on the tile equals flags already placed + number of undiscovered adjacent tiles
-    if (cell.adjacentMines === currentFlagged + unrevealedCount && unrevealedCount > 0) {
+    // Case 2: Chord when the number of flags equals the adjacent mines (reveal adjacent unflagged cells)
+    else if (cell.adjacentMines === currentFlagged && unrevealedCount > 0) {
+        // Play click sound once for the chord operation
+        if (isAutoFlagAction) {
+            Audio.playSound('click-sound');
+        }
+        
+        // Reveal all non-flagged adjacent cells (chord action)
         unrevealedCells.forEach(pos => {
-            toggleFlag(pos.x, pos.y);
+            revealCell(pos.x, pos.y);
         });
+        return true; // Operation performed
     }
+    
+    return false; // No operation performed
 }
 
 // Check win condition

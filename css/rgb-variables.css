@@ -1,0 +1,19 @@
+/* 
+ * RGB Variables CSS
+ * Provides RGB versions of theme colors for opacity/transparency effects
+ */
+
+:root {
+    /* Default RGB values for theme colors */
+    --background-rgb: 240, 240, 240;
+    --board-bg-rgb: 225, 225, 225;
+    --cell-color-rgb: 200, 200, 200;
+    --cell-revealed-rgb: 180, 180, 180;
+    --text-color-rgb: 50, 50, 50;
+    --accent-color-rgb: 25, 118, 210;
+    --mine-color-rgb: 244, 67, 54;
+    --flag-color-rgb: 255, 152, 0;
+    --border-color-rgb: 200, 200, 200;
+}
+
+/* Add these RGB variables to each theme in your themes.css */

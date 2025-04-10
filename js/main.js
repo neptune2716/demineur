@@ -91,11 +91,39 @@ function setupEventListeners() {
             UI.initializeGame();
         }
     });
-    
-    // Game controls
-    document.getElementById('new-game').addEventListener('click', function() {
+      // In-game controls
+    document.getElementById('new-game-in-game').addEventListener('click', function() {
         Audio.playSound('click-sound');
-        document.getElementById('menu-modal').style.display = 'none';
+        UI.initializeGame();
+    });
+    
+    // Pause game button
+    document.getElementById('pause-game').addEventListener('click', function() {
+        Audio.playSound('click-sound');
+        UI.showPauseMenu();
+    });
+    
+    // Pause menu events
+    document.getElementById('resume-game').addEventListener('click', function() {
+        Audio.playSound('click-sound');
+        UI.hidePauseMenu();
+    });
+    
+    document.getElementById('pause-close').addEventListener('click', function() {
+        Audio.playSound('click-sound');
+        UI.hidePauseMenu();
+    });
+    
+    document.getElementById('open-options-from-pause').addEventListener('click', function() {
+        Audio.playSound('click-sound');
+        UI.hidePauseMenu();
+        document.getElementById('menu-modal').style.display = 'block';
+    });
+      document.getElementById('quit-game').addEventListener('click', function() {
+        Audio.playSound('click-sound');
+        UI.hidePauseMenu();
+        // Reset to main screen and reinitialize the game
+        UI.resetToMainScreen();
         UI.initializeGame();
     });
     
@@ -221,6 +249,8 @@ function setDifficulty(difficulty) {
     if (Config.difficulties[difficulty]) {
         const { rows, columns, mines } = Config.difficulties[difficulty];
         State.setGameDimensions(rows, columns, mines);
+        // Update the state's difficulty tracking
+        State.setDifficulty(difficulty);
     }
 }
 
