@@ -1,0 +1,196 @@
+/* Game-specific components */
+
+/* Game board */
+.board-container {
+    position: relative;
+    margin: 0 auto;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px var(--shadow-color);
+    background-color: var(--board-background);
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-size), 1fr);
+    grid-template-rows: repeat(var(--grid-size), 1fr);
+    gap: 2px;
+    padding: 3px;
+    background-color: var(--board-background);
+}
+
+/* Cells */
+.cell {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    background-color: var(--cell-color);
+    cursor: pointer;
+    user-select: none;
+    transition: background-color var(--animation-speed), transform var(--animation-speed);
+}
+
+.cell:hover {
+    filter: brightness(1.05);
+    transform: scale(1.02);
+}
+
+.cell.revealed {
+    background-color: var(--cell-revealed);
+    animation: reveal var(--animation-speed) forwards;
+}
+
+.cell.mine {
+    background-color: var(--mine-color);
+}
+
+.cell.flagged::after {
+    content: '🚩';
+    font-size: 16px;
+    animation: flagPlaced 0.2s ease-out;
+}
+
+.cell.question::after {
+    content: '?';
+    font-size: 16px;
+    color: var(--accent-color);
+}
+
+.cell.mine-exploded {
+    background-color: var(--mine-color);
+    animation: shakeMine 0.5s ease-in-out;
+}
+
+.cell.mine-revealed::after {
+    content: '💣';
+    font-size: 16px;
+}
+
+.cell.flagged-wrong {
+    background-color: var(--mine-color);
+    opacity: 0.7;
+}
+
+.cell.flagged-wrong::after {
+    content: '❌';
+    font-size: 16px;
+}
+
+/* Cell numbers */
+.cell[data-adjacent="1"] {
+    color: blue;
+}
+
+.cell[data-adjacent="2"] {
+    color: green;
+}
+
+.cell[data-adjacent="3"] {
+    color: red;
+}
+
+.cell[data-adjacent="4"] {
+    color: darkblue;
+}
+
+.cell[data-adjacent="5"] {
+    color: darkred;
+}
+
+.cell[data-adjacent="6"] {
+    color: teal;
+}
+
+.cell[data-adjacent="7"] {
+    color: black;
+}
+
+.cell[data-adjacent="8"] {
+    color: gray;
+}
+
+/* Game board status overlays */
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+.overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.overlay-win {
+    background-color: rgba(76, 175, 80, 0.7);
+    animation: winPulse 2s infinite;
+}
+
+.overlay-lose {
+    background-color: rgba(244, 67, 54, 0.7);
+    animation: losePulse 2s infinite;
+}
+
+.overlay button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 1rem;
+}
+
+/* Statistics table */
+.statistics-container {
+    margin-top: 20px;
+    width: 100%;
+}
+
+.statistics-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+}
+
+.statistics-table th, .statistics-table td {
+    padding: 8px;
+    border-bottom: 1px solid var(--accent-color);
+    text-align: left;
+}
+
+.statistics-table th {
+    background-color: var(--board-background);
+}
+
+.statistics-table tr:nth-child(even) {
+    background-color: var(--cell-revealed);
+}
+
+/* Charts and data visualization */
+.chart-container {
+    height: 200px;
+    margin: 20px 0;
+}
+
+.bar {
+    fill: var(--accent-color);
+    transition: fill 0.3s ease;
+}
+
+.bar:hover {
+    fill: var(--mine-color);
+}
