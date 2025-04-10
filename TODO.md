@@ -9,6 +9,9 @@
   - Mines counter showing remaining unflagged mines
   - Safe first click (never hit a mine on first click)
 
+Safe mode: 
+  check if the map is doable, if not, generate a new one
+
 - [x] **Advanced Gameplay**
   - Speedrun mode (default)
     - Click on a number to reveal surrounding cells if correct number of mines are flagged
@@ -125,4 +128,3 @@ Remember that all new features should enhance the core relaxing experience, not 
 
 
 background music pas implementée
-when refresh in main menu, still go back to the previous game state
