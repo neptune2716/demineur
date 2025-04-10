@@ -19,22 +19,26 @@ const SOUND_EFFECTS = {
     'click': {
         id: 'click-sound',
         fadeOut: 0.3,
-        file: 'click.wav' // Updated file extension
+        file: 'click.wav', // Updated file extension
+        volumeAdjust: 1  // Increase click sound volume (was too quiet)
     },
     'flag': {
         id: 'flag-sound',
         fadeOut: 0.5,
-        file: 'flag.mp3'
+        file: 'flag.mp3',
+        volumeAdjust: 0.15  // Decrease flag sound volume (was too loud)
     },
     'win': {
         id: 'win-sound',
         fadeOut: 1.0,
-        file: 'win.wav' // Updated file extension
+        file: 'win.wav', // Updated file extension
+        delay: 500      // Add 0.5s delay to avoid overlap with other sounds
     },
     'lose': {
         id: 'lose-sound',
         fadeOut: 1.5,
-        file: 'lose.wav' // Updated file extension
+        file: 'lose.wav', // Updated file extension
+        volumeAdjust: 0.8 // Slightly reduce lose sound volume
     }
 };
 
@@ -72,63 +76,76 @@ export function playSound(soundId) {
     
     const sound = document.getElementById(soundId);
     if (sound) {
-        // Basic fallback approach if Web Audio API isn't available
-        if (!audioContext) {
-            sound.volume = volumeLevel;
-            sound.currentTime = 0;
-            sound.play().catch(error => {
-                console.log("Audio play failed:", error);
-            });
-            return;
-        }
-        
         // Get sound effect config if available
         const effectName = soundId.replace('-sound', '');
         const config = SOUND_EFFECTS[effectName] || { fadeOut: 0.5 };
         
-        // Create or reuse audio source
-        let source;
-        let gainNode;
-        
-        // Check if this audio element is already connected
-        if (!connectedAudioElements.has(soundId)) {
-            // First time - create new source and connection
-            source = audioContext.createMediaElementSource(sound);
-            gainNode = audioContext.createGain();
+        // Apply delay if specified in the config
+        const playWithDelay = () => {
+            // Basic fallback approach if Web Audio API isn't available
+            if (!audioContext) {
+                // Apply volume adjustment if specified
+                const adjustedVolume = volumeLevel * (config.volumeAdjust || 1);
+                sound.volume = Math.min(1, adjustedVolume); // Ensure volume doesn't exceed 1
+                sound.currentTime = 0;
+                sound.play().catch(error => {
+                    console.log("Audio play failed:", error);
+                });
+                return;
+            }
             
-            // Store connection info for reuse
-            connectedAudioElements.set(soundId, { source, gainNode });
+            // Create or reuse audio source
+            let source;
+            let gainNode;
             
-            // Connect the source to the gain node and then to the main audio context
-            source.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-        } else {
-            // Reuse existing connections
-            const connections = connectedAudioElements.get(soundId);
-            source = connections.source;
-            gainNode = connections.gainNode;
-        }
-        
-        // Set current volume
-        gainNode.gain.value = volumeLevel;
-        
-        // Reset and play the sound
-        sound.currentTime = 0;
-        sound.play().then(() => {
-            // Apply fade out at the end for smoother sound
-            const duration = sound.duration || config.fadeOut;
-            const fadeStart = duration - config.fadeOut;
-            
-            // Schedule fade out
-            setTimeout(() => {
-                const fadeOutTime = audioContext.currentTime + config.fadeOut;
-                gainNode.gain.linearRampToValueAtTime(volumeLevel, audioContext.currentTime);
-                gainNode.gain.linearRampToValueAtTime(0, fadeOutTime);
+            // Check if this audio element is already connected
+            if (!connectedAudioElements.has(soundId)) {
+                // First time - create new source and connection
+                source = audioContext.createMediaElementSource(sound);
+                gainNode = audioContext.createGain();
                 
-            }, fadeStart * 1000);
-        }).catch(error => {
-            console.log("Audio play failed:", error);
-        });
+                // Store connection info for reuse
+                connectedAudioElements.set(soundId, { source, gainNode });
+                
+                // Connect the source to the gain node and then to the main audio context
+                source.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+            } else {
+                // Reuse existing connections
+                const connections = connectedAudioElements.get(soundId);
+                source = connections.source;
+                gainNode = connections.gainNode;
+            }
+            
+            // Set current volume with adjustment if specified
+            const adjustedVolume = volumeLevel * (config.volumeAdjust || 1);
+            gainNode.gain.value = Math.min(1, adjustedVolume); // Ensure volume doesn't exceed 1
+            
+            // Reset and play the sound
+            sound.currentTime = 0;
+            sound.play().then(() => {
+                // Apply fade out at the end for smoother sound
+                const duration = sound.duration || config.fadeOut;
+                const fadeStart = duration - config.fadeOut;
+                
+                // Schedule fade out
+                setTimeout(() => {
+                    const fadeOutTime = audioContext.currentTime + config.fadeOut;
+                    gainNode.gain.linearRampToValueAtTime(adjustedVolume, audioContext.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(0, fadeOutTime);
+                    
+                }, fadeStart * 1000);
+            }).catch(error => {
+                console.log("Audio play failed:", error);
+            });
+        };
+        
+        // Check if we need to delay the sound
+        if (config.delay && config.delay > 0) {
+            setTimeout(playWithDelay, config.delay);
+        } else {
+            playWithDelay();
+        }
     }
 }
 

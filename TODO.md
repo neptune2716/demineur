@@ -106,6 +106,7 @@ Implemented calming background audio options (forest, rain, ocean)
 - [ ] **Performance Optimizations**
   - Improve rendering for very large custom boards
   - Optimize animations for smoother experience
+  - refacto the css
 
 ## Unique Differentiators
 - [ ] **Zen Garden Mode**
