@@ -1,0 +1,107 @@
+/* Game board and components */
+
+/* Game board */
+.game-board-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+#game-board {
+    display: grid;
+    grid-template-columns: repeat(var(--columns, 10), 30px);
+    grid-template-rows: repeat(var(--rows, 10), 30px);
+    gap: 2px;
+    background-color: var(--board-background);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 6px 10px var(--shadow-color);
+    transition: transform 0.5s;
+}
+
+.cell {
+    width: 100%;
+    height: 100%;
+    background-color: var(--cell-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    user-select: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color var(--animation-speed), transform 0.15s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.cell.flagged::before {
+    content: "🚩";
+    color: var(--flag-color);
+}
+
+.cell.mine {
+    background-color: var(--mine-color);
+}
+
+.cell.mine::before {
+    content: "💣";
+}
+
+/* Cell numbers */
+.cell[data-mines="1"] { color: blue; }
+.cell[data-mines="2"] { color: green; }
+.cell[data-mines="3"] { color: red; }
+.cell[data-mines="4"] { color: purple; }
+.cell[data-mines="5"] { color: maroon; }
+.cell[data-mines="6"] { color: turquoise; }
+.cell[data-mines="7"] { color: black; }
+.cell[data-mines="8"] { color: gray; }
+
+/* Option toggle */
+.option-toggle {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    justify-content: space-between;
+}
+
+.option-toggle label {
+    margin-right: auto;
+}
+
+.control-action {
+    margin-bottom: 12px;
+}
+
+.control-action label {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.button-select {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* Color customization styles */
+.color-customizer {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.color-customizer h4 {
+    margin-bottom: 8px;
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+.color-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}

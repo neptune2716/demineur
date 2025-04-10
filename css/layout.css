@@ -1,0 +1,139 @@
+/* Layout styles */
+
+header {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 800px;
+    width: 100%;
+}
+
+/* Game info panel */
+.game-info-panel {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 15px;
+    padding: 12px;
+    background-color: var(--board-background);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+.game-info-item {
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 0 15px;
+    text-align: center;
+}
+
+.game-info-item span {
+    color: var(--accent-color);
+}
+
+/* Game controls */
+.game-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: var(--board-background);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+.mines-counter, .timer {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.difficulty-selector, .theme-selector, .audio-controls {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.audio-controls, .game-options {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 10px;
+    background-color: var(--board-background);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px var(--shadow-color);
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.speedrun-toggle {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    position: relative;
+}
+
+/* Info icon with tooltip */
+.info-icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: var(--accent-color);
+    color: white;
+    text-align: center;
+    line-height: 18px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: 8px;
+    cursor: pointer;
+    position: relative;
+}
+
+.tooltip {
+    visibility: hidden;
+    position: absolute;
+    z-index: 2;
+    width: 300px;
+    background-color: var(--board-background);
+    color: var(--text-color);
+    text-align: left;
+    border-radius: 8px;
+    padding: 12px;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    box-shadow: 0 4px 8px var(--shadow-color);
+    font-weight: normal;
+    line-height: 1.5;
+    font-size: 14px;
+}
+
+.info-icon:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+}
+
+.menu-button {
+    min-width: calc(50% - 8px);
+    margin: 4px 0;
+    padding: 10px 0;
+}

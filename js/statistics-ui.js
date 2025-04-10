@@ -190,10 +190,9 @@ function showGameHistory(difficulty) {
     
     // Format the difficulty name properly
     const difficultyName = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
-    
-    // Sort history by date (newest first)
+      // Sort history by completion time (fastest first)
     const sortedHistory = [...gameHistory].sort((a, b) => 
-        new Date(b.date).getTime() - new Date(a.date).getTime()
+        a.time - b.time
     );
     
     // Create history table
@@ -309,15 +308,34 @@ function updatePersonalBests(personalBests) {
             customHeading.style.marginTop = '15px';
             customHeading.style.marginBottom = '10px';
             customBestTimesContainer.appendChild(customHeading);
-            
-            // Add each custom game's best time
-            for (const [key, value] of Object.entries(personalBests.custom)) {
+              // Add each custom game's best time, sorted by quickest time
+            const sortedEntries = Object.entries(personalBests.custom)
+                .filter(([_, value]) => value.quickestWin) // Filter out entries without times
+                .sort((a, b) => a[1].quickestWin - b[1].quickestWin); // Sort by quickest time
+                
+            // Add entries with times first
+            for (const [key, value] of sortedEntries) {
                 const [rows, columns, mines] = key.split('_');
                 const customItem = document.createElement('div');
                 customItem.className = 'custom-best-time-item';
                 customItem.innerHTML = `
                     <span>${rows}×${columns}, ${mines} mines</span>
-                    <span>${value.quickestWin ? formatTime(value.quickestWin) : '--'}</span>
+                    <span>${formatTime(value.quickestWin)}</span>
+                `;
+                customBestTimesContainer.appendChild(customItem);
+            }
+            
+            // Add entries without times last
+            const entriesWithoutTimes = Object.entries(personalBests.custom)
+                .filter(([_, value]) => !value.quickestWin);
+                
+            for (const [key, value] of entriesWithoutTimes) {
+                const [rows, columns, mines] = key.split('_');
+                const customItem = document.createElement('div');
+                customItem.className = 'custom-best-time-item';
+                customItem.innerHTML = `
+                    <span>${rows}×${columns}, ${mines} mines</span>
+                    <span>--</span>
                 `;
                 customBestTimesContainer.appendChild(customItem);
             }
