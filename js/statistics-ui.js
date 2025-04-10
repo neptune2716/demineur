@@ -10,6 +10,9 @@ import * as Audio from './audio.js';
 let statisticsModal = null;
 let achievementsList = null;
 
+// Achievement popup element
+let achievementPopup = null;
+
 /**
  * Initialize the statistics UI
  */
@@ -17,6 +20,28 @@ export function initStatisticsUI() {
     // Cache DOM elements
     statisticsModal = document.getElementById('statistics-modal');
     achievementsList = document.getElementById('achievements-list');
+    
+    // Create achievement popup if it doesn't exist
+    if (!document.getElementById('achievement-popup')) {
+        achievementPopup = document.createElement('div');
+        achievementPopup.id = 'achievement-popup';
+        achievementPopup.className = 'achievement-popup';
+        achievementPopup.innerHTML = `
+            <div class="achievement-popup-header">
+                <span class="achievement-popup-icon" id="achievement-popup-icon"></span>
+                <span class="achievement-popup-title" id="achievement-popup-title"></span>
+            </div>
+            <div class="achievement-popup-description" id="achievement-popup-description"></div>
+        `;
+        document.body.appendChild(achievementPopup);
+    } else {
+        achievementPopup = document.getElementById('achievement-popup');
+    }
+    
+    // Hide popup when clicking anywhere
+    document.addEventListener('click', () => {
+        hideAchievementPopup();
+    });
     
     // Add event listeners for statistics-related buttons
     document.getElementById('view-stats').addEventListener('click', () => {
@@ -435,21 +460,27 @@ function updateAchievements(achievements) {
         
         // Create achievement items for each achievement
         allAchievements.forEach(achievement => {
-            const achievementItem = document.createElement('div');
-            achievementItem.className = achievement.unlocked ? 'achievement-item' : 'achievement-item locked-achievement';
+            const achievementItem = document.createElement('div');            achievementItem.className = achievement.unlocked ? 'achievement-item' : 'achievement-item locked-achievement';
             
             const icon = achievement.unlocked ? '🏆' : '🔒';
-            
-            // Add tooltip for locked achievements showing how to unlock them
-            if (!achievement.unlocked) {
-                achievementItem.setAttribute('title', `How to unlock: ${achievement.description}`);
-                achievementItem.setAttribute('data-tooltip', achievement.description);
-            }
             
             achievementItem.innerHTML = `
                 <span class="achievement-icon">${icon}</span>
                 <span class="achievement-name">${achievement.name}</span>
             `;
+              // Add hover events for custom popup
+            achievementItem.addEventListener('mouseenter', (event) => {
+                showAchievementPopup(achievement, event);
+            });
+            
+            achievementItem.addEventListener('mouseleave', () => {
+                hideAchievementPopup();
+            });
+            
+            // Add mousemove event to follow cursor
+            achievementItem.addEventListener('mousemove', (event) => {
+                updateAchievementPopupPosition(event);
+            });
             
             achievementsList.appendChild(achievementItem);
         });
@@ -461,6 +492,69 @@ function updateAchievements(achievements) {
             noAchievements.style.textAlign = 'center';
             achievementsList.appendChild(noAchievements);
         }
+    }
+}
+
+/**
+ * Show achievement popup with details
+ * @param {Object} achievement - Achievement object with name, description, etc.
+ * @param {Event} event - Mouse event that triggered the popup
+ */
+function showAchievementPopup(achievement, event) {
+    // Set popup content
+    const icon = achievement.unlocked ? '🏆' : '🔒';
+    
+    document.getElementById('achievement-popup-icon').textContent = icon;
+    document.getElementById('achievement-popup-title').textContent = achievement.name;
+    document.getElementById('achievement-popup-description').textContent = achievement.description;
+    
+    // Update the position
+    updateAchievementPopupPosition(event);
+    
+    // Show popup
+    const popup = document.getElementById('achievement-popup');
+    popup.classList.add('visible');
+}
+
+/**
+ * Update the position of the achievement popup to follow cursor
+ * @param {Event} event - Mouse event containing cursor position
+ */
+function updateAchievementPopupPosition(event) {
+    const popup = document.getElementById('achievement-popup');
+    if (!popup || !popup.classList.contains('visible')) return;
+    
+    // Get window dimensions and popup size
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const popupWidth = popup.offsetWidth;
+    const popupHeight = popup.offsetHeight;
+    
+    // Calculate position (offset slightly from cursor)
+    let leftPos = event.clientX + 15;
+    let topPos = event.clientY + 15;
+    
+    // Keep popup within viewport bounds
+    if (leftPos + popupWidth > windowWidth - 20) {
+        leftPos = event.clientX - popupWidth - 5;
+    }
+    
+    if (topPos + popupHeight > windowHeight - 20) {
+        topPos = event.clientY - popupHeight - 5;
+    }
+    
+    // Apply position
+    popup.style.left = `${leftPos}px`;
+    popup.style.top = `${topPos}px`;
+}
+
+/**
+ * Hide achievement popup
+ */
+function hideAchievementPopup() {
+    const popup = document.getElementById('achievement-popup');
+    if (popup) {
+        popup.classList.remove('visible');
     }
 }
 

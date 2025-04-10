@@ -1,0 +1,49 @@
+/* 
+ * Achievement Popup Styles
+ * Custom popup for achievement information
+ */
+
+.achievement-popup {
+    position: fixed;
+    background-color: var(--board-background);
+    color: var(--text-color);
+    border-radius: 8px;
+    padding: 12px;
+    width: 250px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+    pointer-events: none;
+    font-size: 13px;
+}
+
+.achievement-popup.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.achievement-popup-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.achievement-popup-icon {
+    font-size: 22px;
+    margin-right: 10px;
+}
+
+.achievement-popup-title {
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.achievement-popup-description {
+    text-align: center;
+    margin-top: 5px;
+    line-height: 1.4;
+}

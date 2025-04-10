@@ -63,11 +63,10 @@ function setupEventListeners() {
         document.getElementById('menu-modal').style.display = 'none'; // Close menu first
         Tutorial.openTutorial();
     });
-    
-    // Tutorial show on startup checkbox
+      // Tutorial show on startup checkbox
     document.getElementById('show-tutorial-startup').addEventListener('change', function() {
         Audio.playSound('click-sound');
-        Storage.setItem('dontShowTutorial', !this.checked);
+        localStorage.setItem('dontShowTutorial', !this.checked);
     });
     
     // Close menus when clicking outside
@@ -76,11 +75,12 @@ function setupEventListeners() {
         const customModal = document.getElementById('custom-modal');
         const resultModal = document.getElementById('result-modal');
         const tutorialModal = document.getElementById('tutorial-modal');
-        
-        if (event.target === menuModal) {
+          if (event.target === menuModal) {
             Audio.playSound('click-sound');
-            menuModal.style.display = 'none';        } else if (event.target === customModal) {
+            menuModal.style.display = 'none';
+        } else if (event.target === customModal) {
             Audio.playSound('click-sound');
+            customModal.style.display = 'none';
         } else if (event.target === tutorialModal) {
             Audio.playSound('click-sound');
             tutorialModal.style.display = 'none';

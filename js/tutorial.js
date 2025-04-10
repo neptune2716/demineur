@@ -72,12 +72,11 @@ function setupEventListeners() {
         Audio.playSound('click-sound');
         navigateTutorial(1);
     });
-    
-    // Skip button
+      // Skip button
     skipButton.addEventListener('click', () => {
         Audio.playSound('click-sound');
         if (dontShowCheckbox.checked) {
-            Storage.setItem('dontShowTutorial', true);
+            localStorage.setItem('dontShowTutorial', true);
         }
         closeTutorial();
     });

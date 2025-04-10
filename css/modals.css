@@ -218,7 +218,7 @@
     cursor: help;
 }
 
-/* Achievement tooltip */
+/* Achievement tooltip - reverting to original style */
 .locked-achievement::after {
     content: attr(data-tooltip);
     position: absolute;
