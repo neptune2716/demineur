@@ -126,5 +126,4 @@ Implemented calming background audio options (forest, rain, ocean)
 Remember that all new features should enhance the core relaxing experience, not detract from it. Focus on creating a peaceful, stress-free environment where the puzzle-solving is enjoyable rather than frustrating.
 
 
-
 background music pas implementée
