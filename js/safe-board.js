@@ -274,50 +274,55 @@ export function isBoardSolvable(board, safeZone) {
 
 /**
  * Checks for common 50/50 patterns that require guessing
+ * Optimized to reduce redundant neighbor calculations.
  * @param {Array} board - The game board
  * @param {Set} revealed - Set of revealed cell keys
  * @param {Set} flagged - Set of flagged cell keys
  * @returns {boolean} - True if a 50/50 pattern is found
  */
 function has5050Pattern(board, revealed, flagged) {
-    // Check for 1-1 patterns (common 50/50 situations)
     const edgeCells = findEdgeCells(board, revealed, flagged);
     
+    // Pre-calculate unknown neighbors for relevant edge cells
+    const edgeCellInfo = new Map();
     for (const cell of edgeCells) {
-        // Look for 1-1 patterns (a cell with exactly 1 mine in 2 unknown cells)
+        // Only consider cells that could form a 1-in-2 pattern
         if (cell.adjacentUnknowns === 2 && cell.adjacentMines - cell.adjacentFlagged === 1) {
-            // Get the unknown neighbors
             const unknownNeighbors = getNeighbors(cell.x, cell.y).filter(n => {
                 const key = `${n.x},${n.y}`;
                 return !revealed.has(key) && !flagged.has(key);
             });
-            
-            // Check if another revealed cell touches the same 2 unknown cells
-            for (const otherCell of edgeCells) {
-                if (cell.x === otherCell.x && cell.y === otherCell.y) continue;
-                
-                if (otherCell.adjacentUnknowns === 2 && 
-                    otherCell.adjacentMines - otherCell.adjacentFlagged === 1) {
-                    
-                    const otherUnknownNeighbors = getNeighbors(otherCell.x, otherCell.y).filter(n => {
-                        const key = `${n.x},${n.y}`;
-                        return !revealed.has(key) && !flagged.has(key);
-                    });
-                    
-                    // If both revealed cells have the same unknown neighbors, it's a 50/50 pattern
-                    if (unknownNeighbors.length === 2 && otherUnknownNeighbors.length === 2 &&
-                        unknownNeighbors[0].x === otherUnknownNeighbors[0].x && 
-                        unknownNeighbors[0].y === otherUnknownNeighbors[0].y &&
-                        unknownNeighbors[1].x === otherUnknownNeighbors[1].x && 
-                        unknownNeighbors[1].y === otherUnknownNeighbors[1].y) {
-                        return true;
-                    }
-                }
+            // Sort neighbors to ensure consistent comparison regardless of order
+            unknownNeighbors.sort((a, b) => (a.y * State.columns + a.x) - (b.y * State.columns + b.x));
+            edgeCellInfo.set(`${cell.x},${cell.y}`, unknownNeighbors);
+        }
+    }
+
+    // Convert map keys to an array for easier iteration
+    const relevantEdgeKeys = Array.from(edgeCellInfo.keys());
+
+    // Compare relevant edge cells
+    for (let i = 0; i < relevantEdgeKeys.length; i++) {
+        const key1 = relevantEdgeKeys[i];
+        const neighbors1 = edgeCellInfo.get(key1);
+        
+        // Compare with subsequent cells in the list
+        for (let j = i + 1; j < relevantEdgeKeys.length; j++) {
+            const key2 = relevantEdgeKeys[j];
+            const neighbors2 = edgeCellInfo.get(key2);
+
+            // Check if they share the exact same two unknown neighbors
+            if (neighbors1[0].x === neighbors2[0].x && 
+                neighbors1[0].y === neighbors2[0].y &&
+                neighbors1[1].x === neighbors2[1].x && 
+                neighbors1[1].y === neighbors2[1].y) {
+                // console.log(`Detected 50/50 pattern between ${key1} and ${key2}`);
+                return true; // Found a 50/50 pattern
             }
         }
     }
     
-    return false;
+    return false; // No 50/50 pattern found
 }
 
 /**
@@ -417,6 +422,7 @@ export function generateSolvableBoard(safeZone) {
 
 /**
  * Uses a progressive approach to place mines in a way that's more likely to be solvable
+ * Optimized scoring to avoid simulation within the loop.
  * @param {Array} safeZone - Array of cells that should not have mines
  * @returns {boolean} - Whether mine placement was successful
  */
@@ -484,7 +490,7 @@ function tryProgressiveMineGeneration(safeZone) {
         // Calculate adjacent mines for the partially filled board
         updateAdjacentMineCounts(State.gameBoard);
         
-        // --- Strategic Placement for Remaining Mines ---
+        // --- Strategic Placement for Remaining Mines (Optimized Scoring) ---
         const remainingMinesToPlace = State.mineCount - minesPlaced;
         if (remainingMinesToPlace > 0) {
             const candidates = [];
@@ -497,50 +503,33 @@ function tryProgressiveMineGeneration(safeZone) {
                 }
             }
 
-            // Score each candidate
+            // Score each candidate without simulation
             const scoredCandidates = [];
             for (const cand of candidates) {
                 let score = 0;
                 let adjacentExistingMines = 0;
-
-                // Simulate placing mine at candidate location
-                State.gameBoard[cand.y][cand.x].isMine = true;
-                // Temporarily update counts around the candidate for accurate neighbor checks
-                const neighborsToUpdate = getNeighbors(cand.x, cand.y);
-                neighborsToUpdate.push(cand); // Include candidate itself if needed by logic below
-                const originalNeighborCounts = new Map();
-                for(const n of neighborsToUpdate) {
-                    if (!State.gameBoard[n.y][n.x].isMine) {
-                        originalNeighborCounts.set(`${n.x},${n.y}`, State.gameBoard[n.y][n.x].adjacentMines);
-                        State.gameBoard[n.y][n.x].adjacentMines = countAdjacentMines(State.gameBoard, n.x, n.y);
-                    }
-                }
-
-                // --- Scoring Logic --- 
                 const neighbors = getNeighbors(cand.x, cand.y);
+
+                // --- Scoring Logic (No Simulation) --- 
                 for (const n of neighbors) {
                     if (State.gameBoard[n.y][n.x].isMine) {
-                        // Check if the neighbor is the mine we just placed (it shouldn't be, but safety check)
-                        if (n.x !== cand.x || n.y !== cand.y) {
-                             adjacentExistingMines++;
-                        }
+                        adjacentExistingMines++;
                         continue; // Skip scoring based on mine neighbors
                     }
 
-                    // Analyze the non-mine neighbor 'n'
+                    // Analyze the non-mine neighbor 'n' based on CURRENT state
                     const nnNeighbors = getNeighbors(n.x, n.y);
-                    let otherMines = 0;
-                    let otherUnknown = 0;
+                    let otherMines = 0; // Mines adjacent to n, excluding candidate
+                    let otherUnknown = 0; // Unknowns adjacent to n, excluding candidate
 
                     for (const nn of nnNeighbors) {
-                        // Skip the candidate cell itself when analyzing neighbor's neighbors
+                        // Skip the candidate cell itself
                         if (nn.x === cand.x && nn.y === cand.y) continue; 
 
                         if (State.gameBoard[nn.y][nn.x].isMine) {
                             otherMines++;
                         } else {
-                            // Consider a cell potentially unknown if it's not a mine and not in the initial safe zone
-                            // This is an approximation, as we don't know the revealed state yet.
+                            // Estimate unknown: not a mine, not in initial safe zone
                             const nnIsSafe = safeZone.some(pos => pos.x === nn.x && pos.y === nn.y);
                             if (!nnIsSafe) { 
                                 otherUnknown++;
@@ -548,46 +537,37 @@ function tryProgressiveMineGeneration(safeZone) {
                         }
                     }
 
-                    const neighborMineCount = State.gameBoard[n.y][n.x].adjacentMines; // This count includes the simulated mine at cand
+                    // Current mine count for neighbor 'n'
+                    const currentNeighborMineCount = State.gameBoard[n.y][n.x].adjacentMines;
+                    // Estimated count if mine placed at candidate
+                    const estimatedNeighborMineCount = currentNeighborMineCount + 1; 
 
-                    // Penalize creating forced mine situations
-                    if (neighborMineCount === otherUnknown + 1 && otherUnknown > 0) { // +1 because cand is the mine
-                        score += 5; // Moderate penalty for forcing all other unknowns to be mines
+                    // Penalize creating forced mine situations (estimated)
+                    if (estimatedNeighborMineCount === otherUnknown + 1 && otherUnknown > 0) {
+                        score += 5; 
                     }
 
-                    // Penalize creating 1-1 patterns (high penalty)
-                    // If neighbor's count becomes 1, and it only has one *other* unknown neighbor
-                    if (neighborMineCount === 1 && otherUnknown === 1) { 
-                        score += 50; // High penalty for creating 1-1
+                    // Penalize creating 1-1 patterns (estimated)
+                    if (estimatedNeighborMineCount === 1 && otherUnknown === 1) { 
+                        score += 50; 
                     }
-                     // Penalize creating 1-2 patterns (potential 50/50)
-                     if (neighborMineCount === 1 && otherUnknown === 2) {
-                         score += 15; // Moderate penalty
+                     // Penalize creating 1-2 patterns (potential 50/50, estimated)
+                     if (estimatedNeighborMineCount === 1 && otherUnknown === 2) {
+                         score += 15; 
                      }
-                     // Penalize creating 2-2 patterns (potential 50/50)
-                     if (neighborMineCount === 2 && otherUnknown === 2) {
-                         score += 15; // Moderate penalty
+                     // Penalize creating 2-2 patterns (potential 50/50, estimated)
+                     if (estimatedNeighborMineCount === 2 && otherUnknown === 2) {
+                         score += 15; 
                      }
                 }
                 // --- End Scoring Logic --- 
 
-                // Add penalty for clumping
+                // Add penalty for clumping (based on existing mines)
                 score += adjacentExistingMines * 3;
                 // Add small random factor for tie-breaking
                 score += Math.random(); 
 
                 scoredCandidates.push({ x: cand.x, y: cand.y, score });
-
-                // Undo simulation: Remove mine and restore neighbor counts
-                State.gameBoard[cand.y][cand.x].isMine = false;
-                 for(const n of neighborsToUpdate) {
-                     if (!State.gameBoard[n.y][n.x].isMine) {
-                         const key = `${n.x},${n.y}`;
-                         if (originalNeighborCounts.has(key)) {
-                            State.gameBoard[n.y][n.x].adjacentMines = originalNeighborCounts.get(key);
-                         } // else: it was 0 before and still is, or wasn't a neighbor we tracked
-                     }
-                 }
             }
             
             // Sort candidates by score (lower score first)
@@ -597,7 +577,6 @@ function tryProgressiveMineGeneration(safeZone) {
             let placedCount = 0;
             for (let i = 0; i < scoredCandidates.length && placedCount < remainingMinesToPlace; i++) {
                 const bestCandidate = scoredCandidates[i];
-                 // Ensure the spot is still available (should be, but safety check)
                  if (!State.gameBoard[bestCandidate.y][bestCandidate.x].isMine) { 
                     State.gameBoard[bestCandidate.y][bestCandidate.x].isMine = true;
                     minesPlaced++;

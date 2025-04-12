@@ -406,11 +406,21 @@ export function getCellElement(x, y) {
     return document.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
 }
 
+// Helper function to format time in seconds to M:SS or S format
+function formatDuration(seconds) {
+    if (seconds < 60) {
+        return `${seconds}s`;
+    }
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}m ${remainingSeconds.toString().padStart(2, '0')}s`;
+}
+
 // Start timer
 export function startTimer() {
     State.setTimerInterval(setInterval(() => {
         State.incrementTimer();
-        timerElement.textContent = State.timer;
+        timerElement.textContent = formatDuration(State.timer);
     }, 1000));
 }
 
@@ -427,7 +437,7 @@ export function showResultModal(isWin, timer) {
     
     if (isWin) {
         resultMessage.textContent = 'Congratulations!';
-        resultDetails.textContent = `You won in ${timer} seconds.`;
+        resultDetails.textContent = `You won in ${formatDuration(timer)}.`;
         resultMessage.style.color = 'var(--accent-color)';
     } else {
         resultMessage.textContent = 'Game Over';

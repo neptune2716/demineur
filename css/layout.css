@@ -18,25 +18,29 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: calc(100% + 20px); /* Match the width of game board plus padding */
-    max-width: max-content;
-    margin-bottom: 5px; /* Reduced space between info panel and grid */
-    padding: 8px 10px;
-    background-color: transparent; /* Make panel background transparent */
+    width: 100%; /* Adjust width as needed, maybe slightly less than 100% if padding causes overflow */
+    max-width: 600px; /* Or match your game board width */
+    margin-bottom: 10px; /* Increased space slightly */
+    padding: 8px 15px; /* Adjusted padding */
+    background-color: rgba(var(--board-background-rgb), 0.5); /* Semi-transparent background */
+    border-radius: 8px;
+    box-sizing: border-box; /* Include padding in width calculation */
     margin-left: auto;
     margin-right: auto;
 }
 
 .game-info-item {
-    font-size: 1.2rem;
+    font-size: 1.1rem; /* Slightly smaller font */
     font-weight: bold;
-    padding: 0 15px;
     text-align: center;
-    flex: 1;
+    white-space: nowrap; /* Prevent label and value from wrapping */
+    flex-shrink: 0; /* Prevent shrinking */
+    padding: 0 10px; /* Adjust padding */
 }
 
 .game-info-item span {
     color: var(--accent-color);
+    margin-left: 5px; /* Add a small space between label and value */
 }
 
 /* Game controls */
