@@ -242,17 +242,34 @@ export function resetToMainScreen() {
 /**
  * Show the pause menu
  */
+/**
+ * Show the pause menu and pause the timer
+ */
 export function showPauseMenu() {
     const pauseMenu = document.getElementById('pause-menu');
     pauseMenu.style.display = 'block';
+    pauseMenu.classList.add('centered-modal');
+    
+    // Store the current timer interval and clear it
+    if (State.timerInterval) {
+        clearInterval(State.timerInterval);
+        // Store the active state to resume later
+        pauseMenu.dataset.wasActive = 'true';
+    }
 }
 
 /**
- * Hide the pause menu
+ * Hide the pause menu and resume the timer if game was active
  */
 export function hidePauseMenu() {
     const pauseMenu = document.getElementById('pause-menu');
     pauseMenu.style.display = 'none';
+    
+    // Resume the timer if the game was active when paused
+    if (pauseMenu.dataset.wasActive === 'true' && State.gameActive) {
+        startTimer();
+        pauseMenu.dataset.wasActive = 'false';
+    }
 }
 
 /**

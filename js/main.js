@@ -73,14 +73,15 @@ function setupEventListeners() {
     document.getElementById('show-tutorial-startup').addEventListener('change', function() {
         Audio.playSound('click-sound');
         localStorage.setItem('dontShowTutorial', !this.checked);
-    });
-      // Close menus when clicking outside
+    });      // Close menus when clicking outside
     window.addEventListener('click', function(event) {
         const menuModal = document.getElementById('menu-modal');
         const customModal = document.getElementById('custom-modal');
         const resultModal = document.getElementById('result-modal');
         const tutorialModal = document.getElementById('tutorial-modal');
-          if (event.target === menuModal) {
+        const pauseMenu = document.getElementById('pause-menu');
+        
+        if (event.target === menuModal) {
             Audio.playSound('click-sound');
             menuModal.style.display = 'none';
             // Update mode indicators when clicking outside to close
@@ -88,6 +89,9 @@ function setupEventListeners() {
         } else if (event.target === customModal) {
             Audio.playSound('click-sound');
             customModal.style.display = 'none';
+        } else if (event.target === pauseMenu) {
+            Audio.playSound('click-sound');
+            UI.hidePauseMenu();
         } else if (event.target === tutorialModal) {
             Audio.playSound('click-sound');
             tutorialModal.style.display = 'none';
@@ -95,10 +99,10 @@ function setupEventListeners() {
         } else if (event.target === resultModal) {
             Audio.playSound('click-sound');
             resultModal.style.display = 'none';
-            UI.initializeGame();
-        }
+            UI.initializeGame();        }
     });
-      // In-game controls
+    
+    // In-game controls
     document.getElementById('new-game-in-game').addEventListener('click', function() {
         Audio.playSound('click-sound');
         UI.initializeGame();
@@ -120,10 +124,10 @@ function setupEventListeners() {
         Audio.playSound('click-sound');
         UI.hidePauseMenu();
     });
-    
-    document.getElementById('open-options-from-pause').addEventListener('click', function() {
+      document.getElementById('open-options-from-pause').addEventListener('click', function() {
         Audio.playSound('click-sound');
-        UI.hidePauseMenu();
+        // Don't hide the pause menu when opening options
+        // UI.hidePauseMenu(); -- removed
         
         // Disable safe mode and speedrun mode toggles when accessing from pause menu
         const speedrunToggle = document.getElementById('speedrun-toggle');
@@ -259,9 +263,10 @@ function resetToggleStates() {
 function loadPreferences() {
     // Load audio preferences
     Audio.loadAudioPreferences();
+      // Load controller preferences
+    Controller.loadControllerSettings();
     
-    // Load controller preferences
-    Controller.loadControllerSettings();    // Load speedrun mode preference
+    // Load speedrun mode preference
     if (localStorage.getItem('speedrunMode') !== null) {
         State.setSpeedrunMode(localStorage.getItem('speedrunMode') === 'true');
         document.getElementById('speedrun-toggle').checked = State.speedrunMode;
