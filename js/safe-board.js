@@ -694,8 +694,23 @@ function countMinesOnBoard() {
  * @param {Array} safeZone - Array of cells that should not have mines
  */
 function placeRandomMines(safeZone) {
+    // Make sure we're using the correct mine count from State
+    const targetMineCount = State.mineCount;
+    
+    // Reset all mines first to ensure correct count
+    for (let y = 0; y < State.rows; y++) {
+        for (let x = 0; x < State.columns; x++) {
+            State.gameBoard[y][x].isMine = false;
+        }
+    }
+    
     let minesPlaced = 0;
-    while (minesPlaced < State.mineCount) {
+    // Use a safety counter to prevent infinite loops
+    let attempts = 0;
+    const maxAttempts = State.rows * State.columns * 10;
+    
+    while (minesPlaced < targetMineCount && attempts < maxAttempts) {
+        attempts++;
         const x = Math.floor(Math.random() * State.columns);
         const y = Math.floor(Math.random() * State.rows);
         
@@ -705,6 +720,10 @@ function placeRandomMines(safeZone) {
             State.gameBoard[y][x].isMine = true;
             minesPlaced++;
         }
+    }
+    
+    if (minesPlaced !== targetMineCount) {
+        console.error(`Failed to place all mines: ${minesPlaced}/${targetMineCount} placed`);
     }
 }
 

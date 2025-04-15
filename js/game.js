@@ -136,23 +136,8 @@ function generateSafeModeBoard(safeZone) {
     const success = generateSolvableBoard(safeZone);
     
     // If we failed to generate a solvable board after max attempts,
-    // fall back to standard board generation
+    // show a notification (the fallback board generation is already handled in safe-board.js)
     if (!success) {
-        // Regular random mine placement
-        let minesPlaced = 0;
-        while (minesPlaced < State.mineCount) {
-            const x = Math.floor(Math.random() * State.columns);
-            const y = Math.floor(Math.random() * State.rows);
-            
-            // Check if position is not in safe zone and doesn't already have a mine
-            const isSafe = safeZone.some(pos => pos.x === x && pos.y === y);
-            
-            if (!isSafe && !State.gameBoard[y][x].isMine) {
-                State.gameBoard[y][x].isMine = true;
-                minesPlaced++;
-            }
-        }
-        
         // Show notification that safe mode couldn't be guaranteed
         import('./notification.js').then(Notification => {
             Notification.showInfo("Couldn't guarantee a fully solvable board - some guessing may be required");
