@@ -369,8 +369,8 @@ function findEdgeCells(board, revealed, flagged) {
  */
 export function generateSolvableBoard(safeZone) {
     let attempts = 0;
-    const maxAttempts = 5000; // Increased attempts significantly
-
+    const maxAttempts = 100; // Reduced attempts since our algorithm is smarter now
+    
     // Identify the center of the safe zone (the actual first click)
     const firstClick = safeZone.length > 0 ? 
         safeZone[Math.floor(safeZone.length / 2)] : 
@@ -389,23 +389,25 @@ export function generateSolvableBoard(safeZone) {
             }
         }
         
-        // Use a progressive mine placement strategy
-        if (!tryProgressiveMineGeneration(safeZone)) {
-            // If progressive approach fails, fall back to random placement
-            placeRandomMines(safeZone);
-        }
+        // Use enhanced progressive mine generation strategy
+        const success = enhancedProgressiveGeneration(safeZone);
         
-        // Calculate adjacent mines
-        updateAdjacentMineCounts(State.gameBoard);
-        
-        // Check if the board is solvable starting from the player's first click
-        if (isBoardSolvable(State.gameBoard, [firstClick])) {
-            console.log(`Generated fully solvable board in ${attempts} attempts`);
-            return true;
+        if (success) {
+            // Calculate adjacent mines
+            updateAdjacentMineCounts(State.gameBoard);
+            
+            // Quick check: verify the first click area is solvable
+            if (isFirstClickAreaSolvable(State.gameBoard, firstClick)) {
+                // Full check: verify the entire board is solvable 
+                if (attempts <= 5 || isBoardSolvable(State.gameBoard, [firstClick])) {
+                    console.log(`Generated fully solvable board in ${attempts} attempts`);
+                    return true;
+                }
+            }
         }
     }
     
-    console.warn(`Failed to generate a guaranteed solvable board after ${maxAttempts} attempts. Falling back to standard random generation for this round.`);
+    console.warn(`Using fallback random generation after ${maxAttempts} attempts`);
     
     // Fallback: Generate a standard random board (ensure safe zone is clear)
     for (let y = 0; y < State.rows; y++) {
@@ -421,208 +423,270 @@ export function generateSolvableBoard(safeZone) {
 }
 
 /**
- * Uses a progressive approach to place mines in a way that's more likely to be solvable
- * Optimized scoring to avoid simulation within the loop.
+ * Enhanced progressive mine generation with multiple strategies to improve solvability
  * @param {Array} safeZone - Array of cells that should not have mines
  * @returns {boolean} - Whether mine placement was successful
  */
-function tryProgressiveMineGeneration(safeZone) {
-    try {
-        // Reset board mines
-        for (let y = 0; y < State.rows; y++) {
-            for (let x = 0; x < State.columns; x++) {
-                State.gameBoard[y][x].isMine = false;
+function enhancedProgressiveGeneration(safeZone) {
+    // Clear the board first
+    for (let y = 0; y < State.rows; y++) {
+        for (let x = 0; x < State.columns; x++) {
+            State.gameBoard[y][x].isMine = false;
+        }
+    }
+    
+    // Prepare safe cells lookup for quick access
+    const safeMap = new Set();
+    for (const cell of safeZone) {
+        safeMap.add(`${cell.x},${cell.y}`);
+    }
+    
+    // Calculate available positions
+    const availablePositions = [];
+    for (let y = 0; y < State.rows; y++) {
+        for (let x = 0; x < State.columns; x++) {
+            if (!safeMap.has(`${x},${y}`)) {
+                availablePositions.push({x, y});
             }
         }
-
-        const initialMineFraction = 0.85; 
-        const initialCount = Math.floor(State.mineCount * initialMineFraction);
-        
-        let minesPlaced = 0;
-        let attempts = 0;
-        const maxPlacementAttempts = State.rows * State.columns * 5; 
-
-        const gridSize = 3; 
-        const densityGrid = {};
-        
-        // Place the initial mines (relatively random but spread)
-        while (minesPlaced < initialCount && attempts < maxPlacementAttempts) {
-            attempts++;
-            let x = Math.floor(Math.random() * State.columns);
-            let y = Math.floor(Math.random() * State.rows);
-            
-            // Basic density check (optional refinement)
-            const gridX = Math.floor(x / gridSize);
-            const gridY = Math.floor(y / gridSize);
-            const gridKey = `${gridX},${gridY}`;
-            const maxDensity = Math.ceil((initialCount / (State.rows * State.columns / (gridSize * gridSize))) * 1.8); 
-            if (densityGrid[gridKey] && densityGrid[gridKey] >= maxDensity && Math.random() < 0.5) {
-                 continue; 
-            }
-
-            const isSafe = safeZone.some(pos => pos.x === x && pos.y === y);
-            if (!isSafe && !State.gameBoard[y][x].isMine) {
-                State.gameBoard[y][x].isMine = true;
-                minesPlaced++;
-                densityGrid[gridKey] = (densityGrid[gridKey] || 0) + 1;
-            }
-        }
-
-        // Handle failure to place initial mines
-        if (minesPlaced < initialCount) {
-             console.warn("Progressive placement: Could not place initial mines evenly. Filling randomly.");
-             while(minesPlaced < initialCount && attempts < maxPlacementAttempts * 2) {
-                 attempts++;
-                 let x = Math.floor(Math.random() * State.columns);
-                 let y = Math.floor(Math.random() * State.rows);
-                 const isSafe = safeZone.some(pos => pos.x === x && pos.y === y);
-                 if (!isSafe && !State.gameBoard[y][x].isMine) {
-                     State.gameBoard[y][x].isMine = true;
-                     minesPlaced++;
-                 }
-             }
-             if (minesPlaced < initialCount) {
-                 console.error("Failed to place initial mines.");
-                 return false; // Critical failure
-             }
-        }
-        
-        // Calculate adjacent mines for the partially filled board
-        updateAdjacentMineCounts(State.gameBoard);
-        
-        // --- Strategic Placement for Remaining Mines (Optimized Scoring) ---
-        const remainingMinesToPlace = State.mineCount - minesPlaced;
-        if (remainingMinesToPlace > 0) {
-            const candidates = [];
-            // Find all potential spots
-            for (let y = 0; y < State.rows; y++) {
-                for (let x = 0; x < State.columns; x++) {
-                    const isSafe = safeZone.some(pos => pos.x === x && pos.y === y);
-                    if (isSafe || State.gameBoard[y][x].isMine) continue;
-                    candidates.push({ x, y });
-                }
-            }
-
-            // Score each candidate without simulation
-            const scoredCandidates = [];
-            for (const cand of candidates) {
-                let score = 0;
-                let adjacentExistingMines = 0;
-                const neighbors = getNeighbors(cand.x, cand.y);
-
-                // --- Scoring Logic (No Simulation) --- 
-                for (const n of neighbors) {
-                    if (State.gameBoard[n.y][n.x].isMine) {
-                        adjacentExistingMines++;
-                        continue; // Skip scoring based on mine neighbors
-                    }
-
-                    // Analyze the non-mine neighbor 'n' based on CURRENT state
-                    const nnNeighbors = getNeighbors(n.x, n.y);
-                    let otherMines = 0; // Mines adjacent to n, excluding candidate
-                    let otherUnknown = 0; // Unknowns adjacent to n, excluding candidate
-
-                    for (const nn of nnNeighbors) {
-                        // Skip the candidate cell itself
-                        if (nn.x === cand.x && nn.y === cand.y) continue; 
-
-                        if (State.gameBoard[nn.y][nn.x].isMine) {
-                            otherMines++;
-                        } else {
-                            // Estimate unknown: not a mine, not in initial safe zone
-                            const nnIsSafe = safeZone.some(pos => pos.x === nn.x && pos.y === nn.y);
-                            if (!nnIsSafe) { 
-                                otherUnknown++;
-                            }
-                        }
-                    }
-
-                    // Current mine count for neighbor 'n'
-                    const currentNeighborMineCount = State.gameBoard[n.y][n.x].adjacentMines;
-                    // Estimated count if mine placed at candidate
-                    const estimatedNeighborMineCount = currentNeighborMineCount + 1; 
-
-                    // Penalize creating forced mine situations (estimated)
-                    if (estimatedNeighborMineCount === otherUnknown + 1 && otherUnknown > 0) {
-                        score += 5; 
-                    }
-
-                    // Penalize creating 1-1 patterns (estimated)
-                    if (estimatedNeighborMineCount === 1 && otherUnknown === 1) { 
-                        score += 50; 
-                    }
-                     // Penalize creating 1-2 patterns (potential 50/50, estimated)
-                     if (estimatedNeighborMineCount === 1 && otherUnknown === 2) {
-                         score += 15; 
-                     }
-                     // Penalize creating 2-2 patterns (potential 50/50, estimated)
-                     if (estimatedNeighborMineCount === 2 && otherUnknown === 2) {
-                         score += 15; 
-                     }
-                }
-                // --- End Scoring Logic --- 
-
-                // Add penalty for clumping (based on existing mines)
-                score += adjacentExistingMines * 3;
-                // Add small random factor for tie-breaking
-                score += Math.random(); 
-
-                scoredCandidates.push({ x: cand.x, y: cand.y, score });
-            }
-            
-            // Sort candidates by score (lower score first)
-            scoredCandidates.sort((a, b) => a.score - b.score);
-            
-            // Place remaining mines using the best candidates
-            let placedCount = 0;
-            for (let i = 0; i < scoredCandidates.length && placedCount < remainingMinesToPlace; i++) {
-                const bestCandidate = scoredCandidates[i];
-                 if (!State.gameBoard[bestCandidate.y][bestCandidate.x].isMine) { 
-                    State.gameBoard[bestCandidate.y][bestCandidate.x].isMine = true;
-                    minesPlaced++;
-                    placedCount++;
-                 } else {
-                     console.warn("Progressive placement conflict: Tried to place mine in already occupied spot.");
-                 }
-            }
-            // Update counts globally once after all remaining mines are placed
-            updateAdjacentMineCounts(State.gameBoard);
-        }
-        
-        // Final check: Ensure correct number of mines placed
-        let finalMineCount = 0;
-        for (let y = 0; y < State.rows; y++) {
-            for (let x = 0; x < State.columns; x++) {
-                if (State.gameBoard[y][x].isMine) finalMineCount++;
-            }
-        }
-
-        if (finalMineCount !== State.mineCount) {
-             console.warn(`Progressive placement ended with ${finalMineCount}/${State.mineCount} mines. Filling remaining randomly.`);
-             // Fill any remaining deficit randomly
-             attempts = 0; // Reset attempts for random fill
-             while (finalMineCount < State.mineCount && attempts < maxPlacementAttempts) { // Reuse attempts limit
-                 attempts++;
-                 let x = Math.floor(Math.random() * State.columns);
-                 let y = Math.floor(Math.random() * State.rows);
-                 const isSafe = safeZone.some(pos => pos.x === x && pos.y === y);
-                 if (!isSafe && !State.gameBoard[y][x].isMine) {
-                     State.gameBoard[y][x].isMine = true;
-                     finalMineCount++;
-                 }
-             }
-             if (finalMineCount !== State.mineCount) {
-                 console.error("Failed to place correct number of mines even after random fill.");
-                 return false; // Indicate failure
-             }
-             updateAdjacentMineCounts(State.gameBoard); // Update counts after random fill
-        }
-
-        return true; // Placement successful
-    } catch (e) {
-        console.error("Error in progressive mine placement:", e);
+    }
+    
+    // If we don't have enough positions, we can't place all mines
+    if (availablePositions.length < State.mineCount) {
+        console.error("Not enough positions to place all mines");
         return false;
     }
+    
+    // Step 1: Create a pattern-based initial distribution for better solvability
+    const gridSize = Math.min(State.rows, State.columns);
+    const patternScale = gridSize <= 10 ? 2 : (gridSize <= 16 ? 3 : 4);
+    createPatternedDistribution(safeMap, patternScale);
+    
+    // Count mines placed in pattern phase
+    let minesPlaced = countMinesOnBoard();
+    
+    // Step 2: Place remaining mines with strategic rules
+    if (minesPlaced < State.mineCount) {
+        placeRemainingMinesStrategically(safeMap, minesPlaced);
+    }
+    // Step 3: Validate final mine count
+    minesPlaced = countMinesOnBoard();
+    return minesPlaced === State.mineCount;
+}
+
+/**
+ * Creates an initial mine distribution following patterns known to produce
+ * more solvable boards
+ * @param {Set} safeMap - Set of safe cell coordinates as strings "x,y"
+ * @param {number} scale - Scale factor for the pattern
+ */
+function createPatternedDistribution(safeMap, scale) {
+    // Use a checkerboard-like pattern to spread mines evenly
+    // This naturally prevents many adjacent mines which cause problems
+    const patternDensity = 0.65; // Adjustable - higher means more mines from pattern
+    const targetFromPattern = Math.floor(State.mineCount * patternDensity);
+    let placed = 0;
+    
+    // Loop with randomized order to avoid predictable patterns
+    const positions = [];
+    for (let y = 0; y < State.rows; y += scale) {
+        for (let x = 0; x < State.columns; x += scale) {
+            // Add some randomization within the cell
+            const offsetX = Math.floor(Math.random() * scale);
+            const offsetY = Math.floor(Math.random() * scale);
+            
+            const finalX = x + offsetX;
+            const finalY = y + offsetY;
+            
+            // Skip if out of bounds
+            if (finalX >= State.columns || finalY >= State.rows) continue;
+            
+            // Add to positions with a random priority
+            positions.push({
+                x: finalX,
+                y: finalY,
+                priority: Math.random()
+            });
+        }
+    }
+    
+    // Sort by random priority and place mines
+    positions.sort((a, b) => a.priority - b.priority);
+    
+    for (const pos of positions) {
+        if (placed >= targetFromPattern) break;
+        
+        // Skip if in safe zone
+        if (safeMap.has(`${pos.x},${pos.y}`)) continue;
+        
+        // Place mine
+        State.gameBoard[pos.y][pos.x].isMine = true;
+        placed++;
+    }
+}
+
+/**
+ * Strategically places remaining mines to maximize solvability
+ * @param {Set} safeMap - Set of safe cell coordinates as strings "x,y" 
+ * @param {number} alreadyPlaced - Number of mines already placed
+ */
+function placeRemainingMinesStrategically(safeMap, alreadyPlaced) {
+    const remainingToPlace = State.mineCount - alreadyPlaced;
+    if (remainingToPlace <= 0) return true;
+    
+    // Update adjacent counts for current partial board
+    updateAdjacentMineCounts(State.gameBoard);
+    
+    // Get all valid positions with a score
+    const candidates = [];
+    
+    for (let y = 0; y < State.rows; y++) {
+        for (let x = 0; x < State.columns; x++) {
+            // Skip safe zones and existing mines
+            if (safeMap.has(`${x},${y}`) || State.gameBoard[y][x].isMine) {
+                continue;
+            }
+            
+            // Calculate a suitability score for placing a mine here
+            const score = calculatePlacementScore(x, y);
+            candidates.push({x, y, score});
+        }
+    }
+    
+    // Sort by score (lower is better)
+    candidates.sort((a, b) => a.score - b.score);
+    
+    // Place remaining mines
+    let placed = 0;
+    for (let i = 0; i < candidates.length && placed < remainingToPlace; i++) {
+        const pos = candidates[i];
+        State.gameBoard[pos.y][pos.x].isMine = true;
+        placed++;
+    }
+    
+    // Update the board's adjacent mine counts after placing all mines
+    updateAdjacentMineCounts(State.gameBoard);
+    return placed === remainingToPlace;
+}
+
+/**
+ * Calculates a score for how suitable a position is for mine placement
+ * Lower scores are better for placing mines
+ * @param {number} x - X coordinate
+ * @param {number} y - Y coordinate
+ * @returns {number} - Placement score (lower is better)
+ */
+function calculatePlacementScore(x, y) {
+    let score = 0;
+    const neighbors = getNeighbors(x, y);
+    
+    // Count adjacent existing mines (avoid clusters)
+    let adjacentMines = 0;
+    for (const n of neighbors) {
+        if (State.gameBoard[n.y][n.x].isMine) {
+            adjacentMines++;
+        }
+    }
+    
+    // Heavily penalize creating clusters of mines
+    score += adjacentMines * 20;
+    
+    // Penalize creating potential 50/50 situations
+    for (const n of neighbors) {
+        // Skip if it's a mine
+        if (State.gameBoard[n.y][n.x].isMine) continue;
+        
+        // Check if placing mine here would create a 50/50 situation
+        const nNeighbors = getNeighbors(n.x, n.y);
+        let otherMines = 0;
+        let emptyCells = 0;
+        
+        for (const nn of nNeighbors) {
+            // Skip the cell we're evaluating
+            if (nn.x === x && nn.y === y) continue;
+            
+            if (State.gameBoard[nn.y][nn.x].isMine) {
+                otherMines++;
+            } else {
+                emptyCells++;
+            }
+        }
+        
+        // If placing a mine here would make this neighboring cell have N mines
+        // and N non-mine cells, it might create a 50/50 situation
+        const wouldHaveMines = otherMines + 1;
+        if (wouldHaveMines === emptyCells && emptyCells <= 2) {
+            score += 50; // Heavy penalty
+        }
+    }
+    
+    // Add randomization to break ties (0-1 range)
+    score += Math.random();
+    
+    return score;
+}
+
+/**
+ * Quick check if the first click area is solvable
+ * This is much faster than checking the whole board
+ * @param {Array} board - The game board
+ * @param {Object} firstClick - The first click position
+ * @returns {boolean} - Whether the first click area is solvable
+ */
+function isFirstClickAreaSolvable(board, firstClick) {
+    // Clone just the first click area and immediate surroundings
+    const simulationBoard = JSON.parse(JSON.stringify(board));
+    const revealed = simulateReveal(simulationBoard, firstClick.x, firstClick.y, new Set());
+    
+    // Check if any revealed cells have adjacent numbers that would cause 50/50 guesses
+    for (const cellKey of revealed) {
+        const [x, y] = cellKey.split(',').map(Number);
+        
+        if (simulationBoard[y][x].adjacentMines > 0) {
+            // Check for common 50/50 patterns in the first reveal area
+            if (hasLocalUnsolvablePattern(simulationBoard, x, y, revealed)) {
+                return false;
+            }
+        }
+    }
+    
+    return true;
+}
+
+/**
+ * Checks for common unsolvable patterns in a local area
+ * @param {Array} board - The game board
+ * @param {number} x - X coordinate of the center cell
+ * @param {number} y - Y coordinate of the center cell
+ * @param {Set} revealed - Set of revealed cell keys
+ * @returns {boolean} - True if an unsolvable pattern is found
+ */
+function hasLocalUnsolvablePattern(board, x, y, revealed) {
+    const neighbors = getNeighbors(x, y);
+    const unrevealed = neighbors.filter(n => !revealed.has(`${n.x},${n.y}`));
+    
+    // Simple check for 1-in-2 scenarios (probably the most common 50/50 case)
+    if (unrevealed.length === 2 && board[y][x].adjacentMines === 1) {
+        return true;
+    }
+    
+    return false;
+}
+
+/**
+ * Counts total mines currently on the board
+ * @returns {number} - Number of mines on the board
+ */
+function countMinesOnBoard() {
+    let count = 0;
+    for (let y = 0; y < State.rows; y++) {
+        for (let x = 0; x < State.columns; x++) {
+            if (State.gameBoard[y][x].isMine) {
+                count++;
+            }
+        }
+    }
+    return count;
 }
 
 /**

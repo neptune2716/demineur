@@ -125,17 +125,17 @@ export function startCustomGame() {
     const rows = Math.max(5, Math.min(100, parseInt(heightInput.value) || 10));
     const columns = Math.max(5, Math.min(100, parseInt(widthInput.value) || 10));
     
-    // Calculate maximum mines allowed (20% of total tiles)
+    // Calculate maximum mines allowed (30% of total tiles)
     const totalTiles = rows * columns;
-    const maxAllowedMines = Math.floor(totalTiles * 0.2);
+    const maxAllowedMines = Math.floor(totalTiles * 0.3);
     
     // Get the requested mines and ensure it's within limits
     let mineCount = Math.max(1, parseInt(minesInput.value) || 10);
-      // Check if mine count exceeds the 20% limit
+      // Check if mine count exceeds the 30% limit
     if (mineCount > maxAllowedMines) {
         // Show a custom warning notification instead of alert
         import('./notification.js').then(Notification => {
-            Notification.showWarning(`Maximum mines allowed is ${maxAllowedMines} (20% of total tiles)`);
+            Notification.showWarning(`Maximum mines allowed is ${maxAllowedMines} (30% of total tiles)`);
         });
         mineCount = maxAllowedMines;
     }
