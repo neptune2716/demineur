@@ -9,6 +9,9 @@ import * as Audio from './audio.js';
 // Cache for DOM elements
 let statisticsModal = null;
 let achievementsList = null;
+// Add caches for Zen progress elements
+let zenBestOneGoElement = null;
+let zenBestRespawnsElement = null;
 
 // Achievement popup element
 let achievementPopup = null;
@@ -20,6 +23,9 @@ export function initStatisticsUI() {
     // Cache DOM elements
     statisticsModal = document.getElementById('statistics-modal');
     achievementsList = document.getElementById('achievements-list');
+    // Cache Zen elements
+    zenBestOneGoElement = document.getElementById('zen-best-one-go');
+    zenBestRespawnsElement = document.getElementById('zen-best-respawns');
     
     // Create achievement popup if it doesn't exist
     if (!document.getElementById('achievement-popup')) {
@@ -178,6 +184,15 @@ function updateStatisticsDisplay() {
     
     // Update achievements
     updateAchievements(stats.achievements);
+    
+    // Update Zen Mode Progress
+    const zenProgress = Statistics.getZenProgress();
+    if (zenBestOneGoElement) {
+        zenBestOneGoElement.textContent = zenProgress.bestOneGo !== null ? `Level ${zenProgress.bestOneGo}` : '--';
+    }
+    if (zenBestRespawnsElement) {
+        zenBestRespawnsElement.textContent = zenProgress.bestWithRespawns !== null ? `Level ${zenProgress.bestWithRespawns}` : '--';
+    }
 }
 
 /**

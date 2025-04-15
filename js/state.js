@@ -3,7 +3,7 @@
  * Manages the game state variables and provides functions to modify them
  */
 
-import { defaultConfig } from './config.js';
+import { defaultConfig, difficulties } from './config.js';
 
 // Game state variables
 export let gameBoard = [];
@@ -19,6 +19,8 @@ export let flaggedMines = 0;
 export let speedrunMode = true;
 export let safeMode = false; // Prevent 50/50 chance situations
 export let difficulty = 'easy'; // Track current difficulty
+export let isZenMode = false; // Track if Zen Mode is active
+export let zenLevel = 1; // Track current Zen Mode level
 
 // State setter methods
 export function setFirstClick(value) {
@@ -73,6 +75,18 @@ export function setDifficulty(value) {
     difficulty = value;
 }
 
+export function setZenMode(value) {
+    isZenMode = value;
+}
+
+export function setZenLevel(value) {
+    zenLevel = value;
+}
+
+export function incrementZenLevel() {
+    zenLevel++;
+}
+
 export function setTimerInterval(interval) {
     timerInterval = interval;
 }
@@ -84,7 +98,11 @@ export function resetGameState() {
     cellsRevealed = 0;
     flaggedMines = 0;
     timer = 0;
-    
+
+    // Don't reset zen mode status here, handle it separately
+    // isZenMode = false;
+    // zenLevel = 1;
+
     // Create empty board
     gameBoard = Array.from({ length: rows }, () => 
         Array.from({ length: columns }, () => ({
@@ -103,4 +121,24 @@ export function setGameDimensions(newRows, newColumns, newMineCount) {
     rows = newRows;
     columns = newColumns;
     mineCount = newMineCount;
+
+    // If not in Zen mode, determine difficulty based on dimensions
+    if (!isZenMode) {
+        let foundDifficulty = 'custom';
+        // Use the properly imported difficulties object
+        if (difficulties) {
+            for (const [diffName, config] of Object.entries(difficulties)) {
+                if (config.rows === newRows && config.columns === newColumns && config.mines === newMineCount) {
+                    foundDifficulty = diffName;
+                    break;
+                }
+            }
+        } else {
+            console.warn("difficulties not available in setGameDimensions");
+        }
+        setDifficulty(foundDifficulty);
+    } else {
+        // In Zen mode, difficulty is 'zen'
+        setDifficulty('zen');
+    }
 }

@@ -1,0 +1,28 @@
+/* Zen Mode specific styling */
+
+.zen-level-indicator {
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1em;
+    color: var(--accent-color);
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 6px 12px;
+    margin: 5px auto;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Animation for level up effect */
+@keyframes levelUpPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); color: var(--mine-color); }
+    100% { transform: scale(1); }
+}
+
+.level-up-animation {
+    animation: levelUpPulse 0.5s ease-in-out;
+}

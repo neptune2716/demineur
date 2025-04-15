@@ -127,3 +127,9 @@ Remember that all new features should enhance the core relaxing experience, not 
 
 
 background music pas implementée
+still some error in safe mode when i still have random situation
+
+i zen mode i should be able to quit the zen mode, without quiting the game, and latter if i want to, to resume my game/zen mode where it was. This as to be done like this : in zen mode, i do not want the "new game button". In the pause button menu if someone click on "quit" i want to csave the game map and the zenmode progress. Then when someone click on the "zen mode" button on the main menu, he sould be able to either start a new game from level 0 or resume his old game/level. Note that the game state saved here should not overlap with the game state saved for refresh or whatewer else. Theses should be two completly different game stae. you can only resume your last game of zen mode.
+
+continue. Note that if the page is refreshed/leaved in zen mode, when reloaded, we should still have the zen mode in his state (map, mines, advancements, zen mode level ect)
+

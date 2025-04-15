@@ -4,8 +4,7 @@
     <title>Relaxing Minesweeper</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/themes.css">
-    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/themes.css">    <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/modals.css">    <link rel="stylesheet" href="css/notifications.css">
@@ -13,12 +12,12 @@
     <link rel="stylesheet" href="css/achievement-popup.css">
     <link rel="stylesheet" href="css/game-transitions.css">
     <link rel="stylesheet" href="css/mode-indicators.css">
+    <link rel="stylesheet" href="css/zen-mode.css">
 </head>
 <body>
     <div class="particles-container" id="particles-container"></div>
-    <div class="notification-container" id="notification-container"></div>
-    <div class="game-container">        <header>
-            <h1>Relaxing Minesweeper</h1>
+    <div class="notification-container" id="notification-container"></div>    <div class="game-container">        <header>
+            <h1 id="game-title">Relaxing Minesweeper</h1>
         </header> 
         
         <!-- Main Screen UI -->
@@ -44,6 +43,7 @@
 
             <!-- Game Controls: Buttons for game setup -->
             <div class="game-controls">
+                <button id="zen-mode-button">Zen Mode</button> <!-- Added Zen Mode Button -->
                 <div class="difficulty-group">
                     <button class="difficulty" data-difficulty="easy">Easy</button>
                     <button class="difficulty" data-difficulty="medium">Medium</button>
@@ -56,6 +56,10 @@
         </div>        <!-- In-Game UI (initially hidden) -->        <div id="in-game-ui" class="in-game-ui">
             <div class="game-info-panel">
                 <div class="game-info-item mines-counter">Mines: <span id="mines-counter">0</span></div>
+                <!-- Zen Mode Level Indicator - Will be shown/hidden via JS -->
+                <div id="zen-level-indicator" class="zen-level-indicator" style="display: none;">
+                    Level <span id="zen-current-level">1</span>
+                </div>
                 <div class="in-game-controls">
                     <button id="new-game-in-game">New Game</button>
                     <button id="pause-game">Pause</button>
@@ -267,6 +271,29 @@
                 <button id="new-game-result">New Game</button>
             </div>
         </div>
+
+        <!-- Zen Mode Start Modal -->
+        <div id="zen-start-modal" class="modal">
+            <div class="modal-content">
+                <h2>Zen Mode</h2>
+                <p>Start a new Zen Mode journey or continue your progress?</p>
+                <button id="zen-start-new">Start New (Level 1)</button>
+                <button id="zen-continue" style="display: none;">Continue (Level <span id="zen-continue-level">1</span>)</button>
+                <button id="zen-start-cancel">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Zen Mode Loss Modal -->
+        <div id="zen-loss-modal" class="modal">
+            <div class="modal-content">
+                <h2>Game Over (Zen Mode)</h2>
+                <p>You lost on Level <span id="zen-loss-level">1</span>. What would you like to do?</p>
+                <button id="zen-loss-replay">Replay Level <span id="zen-replay-level">1</span></button>
+                <button id="zen-loss-restart">Restart Zen Mode (Level 1)</button>
+                <button id="zen-loss-menu">Return to Menu</button>
+            </div>
+        </div>
+        
     </div>    <!-- Audio elements -->
     <audio id="click-sound" src="sounds/click.wav" preload="auto"></audio>
     <audio id="flag-sound" src="sounds/flag.mp3" preload="auto"></audio>
@@ -333,6 +360,22 @@
                     </div>
                     <div id="custom-best-times" class="custom-best-times">
                         <!-- Custom game best times will be displayed here -->
+                    </div>
+                    <button id="view-more-custom-times" class="view-more-button" style="display: none;">View More</button>
+                </div>
+
+                <!-- New Zen Mode Progress Section -->
+                <div class="statistics-section">
+                    <h3>Zen Mode Progress</h3>
+                    <div class="stats-grid zen-progress-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Best Level (One Go)</div>
+                            <div class="stat-value" id="zen-best-one-go">--</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Best Level (With Respawns)</div>
+                            <div class="stat-value" id="zen-best-respawns">--</div>
+                        </div>
                     </div>
                 </div>
 

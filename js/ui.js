@@ -6,12 +6,16 @@
 import * as State from './state.js';
 import * as Game from './game.js';
 import * as Audio from './audio.js';
+import * as Storage from './storage.js';
 
 // Cache DOM elements
 export const gameBoardElement = document.getElementById('game-board');
 export const minesCounterElement = document.getElementById('mines-counter');
 export const timerElement = document.getElementById('timer');
 export const customModalElement = document.getElementById('custom-modal');
+export const resultModalElement = document.getElementById('result-modal');
+export const zenStartModalElement = document.getElementById('zen-start-modal');
+export const zenLossModalElement = document.getElementById('zen-loss-modal'); // Fixed missing parenthesis
 
 // Set the game theme
 export function setTheme(theme) {
@@ -179,14 +183,13 @@ export function initializeGame() {
     minesCounterElement.textContent = State.mineCount;
     renderBoard();
     
-    // Update statistics on the main page
-    updateMainPageStats();
+    // Update statistics on the main page (only if not in Zen Mode)
+    if (!State.isZenMode) {
+        updateMainPageStats();
+    }
     
     // Add active game visual indicator
     document.body.classList.add('game-active');
-    
-    // Reset the game UI to main screen state
-    resetToMainScreen();
     
     // Update difficulty indicator
     updateDifficultyIndicator();
@@ -195,6 +198,52 @@ export function initializeGame() {
     updateModeIndicators();
     
     return gameBoard;
+}
+
+/**
+ * Updates the Zen Mode level indicator and game title
+ * Shows the indicator when in Zen Mode, hides it otherwise
+ * Updates the displayed level number and changes the main title
+ */
+export function updateZenLevelIndicator() {
+    const zenLevelIndicator = document.getElementById('zen-level-indicator');
+    const zenCurrentLevel = document.getElementById('zen-current-level');
+    const gameTitle = document.getElementById('game-title');
+    
+    if (State.isZenMode) {
+        // Show the indicator and update level
+        zenLevelIndicator.style.display = 'flex';
+        zenCurrentLevel.textContent = State.zenLevel;
+        
+        // Change the game title to indicate Zen Mode
+        gameTitle.textContent = 'Zen Mode';
+        
+        // Add a class to the body to enable zen-specific styles
+        document.body.classList.add('zen-mode-active');
+        
+    } else {
+        // Hide the indicator when not in Zen Mode
+        zenLevelIndicator.style.display = 'none';
+        
+        // Restore the original game title
+        gameTitle.textContent = 'Relaxing Minesweeper';
+        
+        // Remove zen mode class
+        document.body.classList.remove('zen-mode-active');
+    }
+}
+
+/**
+ * Adds a brief animation to the level indicator for level-up events
+ */
+export function animateLevelUp() {
+    const zenLevelIndicator = document.getElementById('zen-level-indicator');
+    zenLevelIndicator.classList.add('level-up-animation');
+    
+    // Remove the animation class after it completes
+    setTimeout(() => {
+        zenLevelIndicator.classList.remove('level-up-animation');
+    }, 600); // Animation duration + a little extra
 }
 
 /**
@@ -217,6 +266,15 @@ export function transitionToGameplay() {
     setTimeout(() => {
         inGameUI.classList.add('active');
     }, 300); // Small delay for sequential animation
+    
+    // Show/Hide New Game button based on mode
+    const newGameInGameButton = document.getElementById('new-game-in-game');
+    if (newGameInGameButton) {
+        newGameInGameButton.style.display = State.isZenMode ? 'none' : 'inline-block';
+    }
+    
+    // Update Zen Mode indicator if needed
+    updateZenLevelIndicator();
 }
 
 /**
@@ -237,6 +295,28 @@ export function resetToMainScreen() {
     // Hide in-game UI
     const inGameUI = document.getElementById('in-game-ui');
     inGameUI.classList.remove('active');
+    
+    // Ensure New Game button is visible when returning to main screen context
+    // (though it's part of in-game UI which is hidden anyway, this is for consistency)
+    const newGameInGameButton = document.getElementById('new-game-in-game');
+    if (newGameInGameButton) {
+        newGameInGameButton.style.display = 'inline-block';
+    }
+    
+    // If quitting Zen Mode, reset the state
+    if (State.isZenMode) {
+        State.setZenMode(false);
+        State.setZenLevel(1);
+        Storage.clearZenProgress(); // Clear saved progress when returning to menu
+        // Also reset the current run statistics
+        import('./statistics.js').then(Statistics => {
+            Statistics.resetZenRun();
+        });
+    }
+    
+    // Update difficulty indicator back to normal and hide Zen indicator
+    updateDifficultyIndicator();
+    updateZenLevelIndicator();
 }
 
 /**
@@ -273,31 +353,34 @@ export function hidePauseMenu() {
 }
 
 /**
- * Update the difficulty indicator based on current difficulty
+ * Update the difficulty indicator based on current difficulty or Zen level
  */
 export function updateDifficultyIndicator() {
     const difficultyLabel = document.getElementById('current-difficulty-label');
     if (difficultyLabel) {
         let difficultyText = "";
         
-        // Show all difficulty levels including Custom
-        switch(State.difficulty) {
-            case 'easy':
-                difficultyText = "Easy";
-                break;
-            case 'medium':
-                difficultyText = "Medium";
-                break;
-            case 'hard':
-                difficultyText = "Hard";
-                break;
-            case 'custom':
-                difficultyText = "Custom";
-                break;
-            default:
-                difficultyText = "Custom";
+        if (State.isZenMode) {
+            difficultyText = `Zen Level ${State.zenLevel}`;
+        } else {
+            // Show standard difficulty levels including Custom
+            switch(State.difficulty) {
+                case 'easy':
+                    difficultyText = "Easy";
+                    break;
+                case 'medium':
+                    difficultyText = "Medium";
+                    break;
+                case 'hard':
+                    difficultyText = "Hard";
+                    break;
+                case 'custom':
+                    difficultyText = "Custom";
+                    break;
+                default:
+                    difficultyText = "Custom"; // Fallback
+            }
         }
-        
         difficultyLabel.textContent = difficultyText;
     }
 }
@@ -448,6 +531,9 @@ export function updateMinesCounter() {
 
 // Show result modal
 export function showResultModal(isWin, timer) {
+    // Don't show the standard result modal in Zen Mode
+    if (State.isZenMode) return;
+    
     const resultModal = document.getElementById('result-modal');
     const resultMessage = document.getElementById('result-message');
     const resultDetails = document.getElementById('result-details');
@@ -463,4 +549,126 @@ export function showResultModal(isWin, timer) {
     }
     
     resultModal.style.display = 'block';
+}
+
+// --- Zen Mode UI Functions ---
+
+/**
+ * Calculates game dimensions for a given Zen level.
+ * Starts with Easy, gradually increases size and mine density.
+ * @param {number} level - The current Zen level.
+ * @returns {{rows: number, columns: number, mineCount: number}}
+ */
+function getZenLevelConfig(level) {
+    // Base config (Easy)
+    let rows = 9;
+    let columns = 9;
+    let mines = 10;
+
+    // Increase size every 5 levels
+    const sizeIncreases = Math.floor((level - 1) / 5);
+    rows += sizeIncreases;
+    columns += sizeIncreases;
+
+    // Increase mine density slightly every level, capping at ~20-25%
+    // Start with ~12% density (10 / 81)
+    const baseDensity = 0.12;
+    const maxDensity = 0.22; // Cap density increase
+    const densityIncreasePerLevel = 0.002;
+    let currentDensity = baseDensity + (level - 1) * densityIncreasePerLevel;
+    currentDensity = Math.min(currentDensity, maxDensity);
+
+    mines = Math.floor(rows * columns * currentDensity);
+
+    // Ensure minimum/maximum dimensions and mines
+    rows = Math.max(5, Math.min(rows, 50)); // Min 5x5, Max 50x50
+    columns = Math.max(5, Math.min(columns, 50));
+    mines = Math.max(5, Math.min(mines, Math.floor(rows * columns * 0.3))); // Min 5 mines, max 30% density
+    mines = Math.min(mines, rows * columns - 9); // Ensure at least a 3x3 safe start
+
+    return { rows, columns, mineCount: mines };
+}
+
+/**
+ * Starts a specific Zen level.
+ * @param {number} level - The level to start.
+ */
+export function startZenLevel(level) {
+    // Set Zen Mode state
+    State.setZenMode(true);
+    State.setZenLevel(level);
+
+    // Get configuration for this level
+    const config = getZenLevelConfig(level);
+    State.setGameDimensions(config.rows, config.columns, config.mineCount);
+
+    // Ensure Safe Mode is enabled for Zen Mode
+    State.setSafeMode(true);
+    
+    // Update the Zen level indicator BEFORE initializing the game
+    updateZenLevelIndicator();
+    
+    // Initialize the game
+    initializeGame();
+    
+    // Ensure we transition to gameplay view if not already there
+    if (!document.body.classList.contains('game-playing')) {
+        transitionToGameplay(); // This will now hide the New Game button
+    } else {
+        // If already in gameplay view (e.g., next level), ensure button is hidden
+        const newGameInGameButton = document.getElementById('new-game-in-game');
+        if (newGameInGameButton) {
+            newGameInGameButton.style.display = 'none';
+        }
+    }
+    
+    // Force update the indicator again to ensure it's visible
+    setTimeout(() => {
+        const zenLevelIndicator = document.getElementById('zen-level-indicator');
+        if (zenLevelIndicator) {
+            zenLevelIndicator.style.display = 'flex';
+            console.log('Forcing Zen Mode indicator visibility');
+        }
+    }, 100);
+}
+
+/**
+ * Shows the Zen Mode start modal.
+ */
+export function showZenStartModal() {
+    const savedLevel = Storage.loadZenProgress();
+    const continueButton = document.getElementById('zen-continue');
+    const continueLevelSpan = document.getElementById('zen-continue-level');
+
+    if (savedLevel && savedLevel > 1) {
+        continueLevelSpan.textContent = savedLevel;
+        continueButton.style.display = 'inline-block';
+    } else {
+        continueButton.style.display = 'none';
+    }
+    zenStartModalElement.style.display = 'block';
+}
+
+/**
+ * Hides the Zen Mode start modal.
+ */
+export function hideZenStartModal() {
+    zenStartModalElement.style.display = 'none';
+}
+
+/**
+ * Shows the Zen Mode loss modal.
+ * @param {number} levelLost - The level the player lost on.
+ */
+export function showZenLossModal(levelLost) {
+    document.getElementById('zen-loss-level').textContent = levelLost;
+    document.getElementById('zen-replay-level').textContent = levelLost;
+    zenLossModalElement.style.display = 'block';
+}
+
+/**
+ * Hides the Zen Mode loss modal.
+ */
+export function hideZenLossModal() {
+    zenLossModalElement.style.display = 'none';
 }

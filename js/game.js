@@ -54,14 +54,31 @@ export function handleMouseClick(event, button) {
     const x = parseInt(event.target.dataset.x);
     const y = parseInt(event.target.dataset.y);
     const cell = State.gameBoard[y][x];
-      // First click safety
+    
+    // First click safety
     if (State.firstClick) {
+        // Remember if we're in Zen Mode before handling the first click
+        const wasInZenMode = State.isZenMode;
+        const zenLevel = State.zenLevel;
+        
         State.setFirstClick(false);
         generateMines(x, y);
         UI.startTimer();
         
         // Transition to game playing state
         UI.transitionToGameplay();
+        
+        // Ensure Zen Mode state is preserved if we were in Zen Mode
+        if (wasInZenMode) {
+            State.setZenMode(true);
+            State.setZenLevel(zenLevel);
+            // Update UI to reflect Zen Mode
+            UI.updateZenLevelIndicator();
+            // Ensure the title stays as "Zen Mode"
+            document.getElementById('game-title').textContent = 'Zen Mode';
+            // Explicitly set difficulty back to 'zen'
+            State.setDifficulty('zen');
+        }
     }
     
     // Handle auto-flag action first (only in speedrun mode)
@@ -460,41 +477,83 @@ export function gameOver(isWin) {
         }
     }
     
-    // Clear saved game state
-    Storage.clearSavedGame();
-    
-    // Record this game's result in statistics
-    import('./statistics.js').then(Statistics => {
-        // Get current difficulty name
-        let difficulty = 'custom';
-        for (const [diffName, config] of Object.entries(Config.difficulties)) {
-            if (config.rows === State.rows && 
-                config.columns === State.columns && 
-                config.mines === State.mineCount) {
-                difficulty = diffName;
-                break;
-            }
+    // --- Handle Zen Mode vs Normal Mode --- 
+    if (State.isZenMode) {        if (isWin) {
+            // Zen Mode Win: Increment level, save progress, start next level
+            State.incrementZenLevel();
+            Storage.saveZenProgress();
+            
+            // Update the level indicator for the new level
+            UI.updateZenLevelIndicator();
+            
+            // Show a brief success message before starting next level
+            import('./notification.js').then(Notification => {
+                Notification.showSuccess(`Level ${State.zenLevel - 1} Complete! Starting Level ${State.zenLevel}...`);
+            });
+            
+            // Add animation to the level indicator
+            UI.animateLevelUp();
+            
+            // Start the next level after a short delay
+            setTimeout(() => {
+                UI.startZenLevel(State.zenLevel);
+            }, 1500); // 1.5 second delay
+        } else {
+            // Zen Mode Loss: Record result, show modal, clear progress
+            import('./statistics.js').then(Statistics => {
+                // Record the loss, passing the level reached (State.zenLevel) instead of time
+                Statistics.recordGameResult(
+                    false, // isWin
+                    State.zenLevel, // Use level instead of time
+                    'zen', // difficulty
+                    { rows: State.rows, columns: State.columns, mines: State.mineCount }, // config
+                    { cellsRevealed: State.cellsRevealed, wrongFlags: document.querySelectorAll('.cell.flagged:not(.mine)').length } // gameStats
+                );
+                // Update main page stats (might show best Zen level now)
+                UI.updateMainPageStats(); 
+            });
+            // Show the Zen Loss Modal
+            UI.showZenLossModal(State.zenLevel);
+            // Clear progress *after* recording the loss and showing the modal
+            Storage.clearZenProgress(); 
         }
+    } else {
+        // Normal Mode Game Over
+        Storage.clearSavedGame(); // Clear saved game state for normal mode
 
-        // Calculate game stats
-        const gameStats = {
-            cellsRevealed: State.cellsRevealed,
-            wrongFlags: document.querySelectorAll('.cell.flagged:not(.mine)').length
-        };
+        // Record this game's result in statistics
+        import('./statistics.js').then(Statistics => {
+            // Get current difficulty name
+            let difficulty = 'custom';
+            for (const [diffName, config] of Object.entries(Config.difficulties)) {
+                if (config.rows === State.rows && 
+                    config.columns === State.columns && 
+                    config.mines === State.mineCount) {
+                    difficulty = diffName;
+                    break;
+                }
+            }
 
-        // Record the game result
-        Statistics.recordGameResult(
-            isWin, 
-            State.timer,
-            difficulty,
-            { rows: State.rows, columns: State.columns, mines: State.mineCount },
-            gameStats
-        );
+            // Calculate game stats
+            const gameStats = {
+                cellsRevealed: State.cellsRevealed,
+                wrongFlags: document.querySelectorAll('.cell.flagged:not(.mine)').length
+            };
+
+            // Record the game result
+            Statistics.recordGameResult(
+                isWin, 
+                State.timer,
+                difficulty,
+                { rows: State.rows, columns: State.columns, mines: State.mineCount },
+                gameStats
+            );
+            
+            // Update statistics on the main page
+            UI.updateMainPageStats();
+        });
         
-        // Update statistics on the main page
-        UI.updateMainPageStats();
-    });
-    
-    // Show result modal
-    UI.showResultModal(isWin, State.timer);
+        // Show the standard result modal
+        UI.showResultModal(isWin, State.timer);
+    }
 }

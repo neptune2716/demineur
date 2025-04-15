@@ -14,12 +14,13 @@ import * as Controller from './controller.js';
 import * as ThemeCustomizer from './theme-customizer.js';
 import * as StatisticsUI from './statistics-ui.js';
 import * as Tutorial from './tutorial.js';
+import * as Statistics from './statistics.js'; // <-- Added this import
 
 // Initialize the game when DOM content is loaded
 document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     loadPreferences();
-      // Initialize the theme customizer
+    // Initialize the theme customizer
     ThemeCustomizer.initColorCustomizer();
     
     // Initialize statistics UI
@@ -69,23 +70,32 @@ function setupEventListeners() {
         UI.updateModeIndicators();
         Tutorial.openTutorial();
     });
-      // Tutorial show on startup checkbox
+    // Tutorial show on startup checkbox
     document.getElementById('show-tutorial-startup').addEventListener('change', function() {
         Audio.playSound('click-sound');
         localStorage.setItem('dontShowTutorial', !this.checked);
-    });      // Close menus when clicking outside
+    });
+    // Zen Mode button
+    document.getElementById('zen-mode-button').addEventListener('click', function() {
+        Audio.playSound('click-sound');
+        UI.showZenStartModal();
+    });
+    // Close menus when clicking outside
     window.addEventListener('click', function(event) {
         const menuModal = document.getElementById('menu-modal');
         const customModal = document.getElementById('custom-modal');
         const resultModal = document.getElementById('result-modal');
         const tutorialModal = document.getElementById('tutorial-modal');
         const pauseMenu = document.getElementById('pause-menu');
+        const zenStartModal = document.getElementById('zen-start-modal');
+        const zenLossModal = document.getElementById('zen-loss-modal');
         
         if (event.target === menuModal) {
             Audio.playSound('click-sound');
             menuModal.style.display = 'none';
             // Update mode indicators when clicking outside to close
             UI.updateModeIndicators();
+            resetToggleStates();
         } else if (event.target === customModal) {
             Audio.playSound('click-sound');
             customModal.style.display = 'none';
@@ -99,12 +109,21 @@ function setupEventListeners() {
         } else if (event.target === resultModal) {
             Audio.playSound('click-sound');
             resultModal.style.display = 'none';
-            UI.initializeGame();        }
-    });
-    
-    // In-game controls
+            UI.initializeGame();
+        } else if (event.target === zenStartModal) {
+            Audio.playSound('click-sound');
+            UI.hideZenStartModal();
+        } else if (event.target === zenLossModal) {
+            Audio.playSound('click-sound');
+            UI.hideZenLossModal();
+        }
+    });    // In-game controls
     document.getElementById('new-game-in-game').addEventListener('click', function() {
         Audio.playSound('click-sound');
+        // Clear saved game state first
+        Storage.clearSavedGame();
+        // Then reset to main screen and initialize the new game
+        UI.resetToMainScreen();
         UI.initializeGame();
     });
     
@@ -124,7 +143,7 @@ function setupEventListeners() {
         Audio.playSound('click-sound');
         UI.hidePauseMenu();
     });
-      document.getElementById('open-options-from-pause').addEventListener('click', function() {
+    document.getElementById('open-options-from-pause').addEventListener('click', function() {
         Audio.playSound('click-sound');
         // Don't hide the pause menu when opening options
         // UI.hidePauseMenu(); -- removed
@@ -158,9 +177,13 @@ function setupEventListeners() {
         UI.initializeGame();
     });
     
-    document.querySelectorAll('.difficulty').forEach(button => {        button.addEventListener('click', function() {
+    document.querySelectorAll('.difficulty').forEach(button => {        
+        button.addEventListener('click', function() {
             Audio.playSound('click-sound');
             const difficulty = this.dataset.difficulty;
+            // Ensure Zen Mode is off when selecting a standard difficulty
+            State.setZenMode(false);
+            Storage.clearZenProgress(); // Clear any saved Zen progress
             setDifficulty(difficulty);
             document.getElementById('menu-modal').style.display = 'none';
             // Update mode indicators when closing menu via difficulty selection
@@ -168,8 +191,11 @@ function setupEventListeners() {
             UI.initializeGame();
         });
     });
-      document.getElementById('custom-difficulty').addEventListener('click', function() {
+    document.getElementById('custom-difficulty').addEventListener('click', function() {
         Audio.playSound('click-sound');
+        // Ensure Zen Mode is off when going to custom
+        State.setZenMode(false);
+        Storage.clearZenProgress();
         document.getElementById('menu-modal').style.display = 'none';
         // Update mode indicators when closing menu to open custom modal
         UI.updateModeIndicators();
@@ -185,7 +211,7 @@ function setupEventListeners() {
         Audio.playSound('click-sound');
         UI.closeCustomModal();
     });
-      document.getElementById('theme').addEventListener('change', function() {
+    document.getElementById('theme').addEventListener('change', function() {
         Audio.playSound('click-sound');
         UI.setTheme(this.value);
     });
@@ -204,7 +230,7 @@ function setupEventListeners() {
             document.getElementById('particles-container').innerHTML = '';
         }
     });
-        // Speedrun mode toggle
+    // Speedrun mode toggle
     document.getElementById('speedrun-toggle').addEventListener('change', function() {
         State.setSpeedrunMode(this.checked);
         localStorage.setItem('speedrunMode', State.speedrunMode);
@@ -230,10 +256,70 @@ function setupEventListeners() {
     
     // Audio setup
     Audio.setupAudioListeners();
-    
-    // Result modal new game button
+      // Result modal new game button
     document.getElementById('new-game-result').addEventListener('click', function() {
         document.getElementById('result-modal').style.display = 'none';
+        
+        // Check if we were in Zen Mode
+        if (State.isZenMode) {
+            // For Zen Mode: continue at the current level
+            UI.startZenLevel(State.zenLevel);
+        } else {
+            // For regular games: start a new game with current settings
+            UI.initializeGame();
+        }
+    });    // Zen Mode Start Modal Buttons
+    document.getElementById('zen-start-new').addEventListener('click', function() {
+        Audio.playSound('click-sound');
+        UI.hideZenStartModal();
+        Storage.clearZenProgress(); // Clear any old progress
+        Statistics.resetZenRun(); // Reset the current run stats
+        
+        // Immediately change title to Zen Mode before starting the level
+        document.getElementById('game-title').textContent = 'Zen Mode';
+        
+        UI.startZenLevel(1);
+    });
+
+    document.getElementById('zen-continue').addEventListener('click', function() {
+        Audio.playSound('click-sound');
+        const savedLevel = Storage.loadZenProgress() || 1;
+        UI.hideZenStartModal();
+        
+        // Immediately change title to Zen Mode before starting the level
+        document.getElementById('game-title').textContent = 'Zen Mode';
+        
+        UI.startZenLevel(savedLevel);
+    });
+
+    document.getElementById('zen-start-cancel').addEventListener('click', function() {
+        Audio.playSound('click-sound');
+        UI.hideZenStartModal();
+    });
+
+    // Zen Mode Loss Modal Buttons
+    document.getElementById('zen-loss-replay').addEventListener('click', function() {
+        Audio.playSound('click-sound');
+        UI.hideZenLossModal();
+        Statistics.markZenRespawUsed(); // Mark that a respawn was used
+        // Replay the current level (which is stored in State.zenLevel)
+        UI.startZenLevel(State.zenLevel);
+    });
+
+    document.getElementById('zen-loss-restart').addEventListener('click', function() {
+        Audio.playSound('click-sound');
+        UI.hideZenLossModal();
+        Storage.clearZenProgress(); // Clear progress on full restart
+        Statistics.resetZenRun(); // Reset the current run stats
+        UI.startZenLevel(1);
+    });
+
+    document.getElementById('zen-loss-menu').addEventListener('click', function() {
+        Audio.playSound('click-sound');
+        UI.hideZenLossModal();
+        UI.resetToMainScreen(); // This now handles resetting Zen state
+        // Re-initialize with default difficulty after returning to menu
+        setDifficulty('easy'); // Or load last used non-zen difficulty
         UI.initializeGame();
     });
 }
@@ -263,7 +349,7 @@ function resetToggleStates() {
 function loadPreferences() {
     // Load audio preferences
     Audio.loadAudioPreferences();
-      // Load controller preferences
+    // Load controller preferences
     Controller.loadControllerSettings();
     
     // Load speedrun mode preference
@@ -285,7 +371,7 @@ function loadPreferences() {
         State.setSafeMode(localStorage.getItem('safeMode') === 'true');
         document.getElementById('safe-mode-toggle').checked = State.safeMode;
     }
-      // Apply saved theme if exists
+    // Apply saved theme if exists
     if (localStorage.getItem('theme')) {
         const savedTheme = localStorage.getItem('theme');
         document.getElementById('theme').value = savedTheme;
@@ -315,19 +401,23 @@ function setDifficulty(difficulty) {
     if (Config.difficulties[difficulty]) {
         const { rows, columns, mines } = Config.difficulties[difficulty];
         State.setGameDimensions(rows, columns, mines);
-        // Update the state's difficulty tracking
-        State.setDifficulty(difficulty);
     }
 }
 
 // Load game state from localStorage
 function loadGameState() {
+    // Don't load standard saved game if Zen progress exists
+    if (Storage.loadZenProgress()) {
+        console.log("Zen progress found, skipping standard game load.");
+        return false; // Prevent standard load
+    }
+
     const savedState = localStorage.getItem('savedGameState');
     if (!savedState) return false;
     
     try {
         const gameState = JSON.parse(savedState);
-          // Restore game dimensions and state
+        // Restore game dimensions and state
         State.setGameDimensions(gameState.rows, gameState.columns, gameState.mineCount);
         State.setCellsRevealed(gameState.cellsRevealed);
         State.setTimer(gameState.timer);
@@ -338,7 +428,7 @@ function loadGameState() {
         // Update CSS variables for grid
         document.documentElement.style.setProperty('--rows', State.rows);
         document.documentElement.style.setProperty('--columns', State.columns);
-          // Restore the game board
+        // Restore the game board
         State.setGameBoard(gameState.board);
         
         // Update UI
