@@ -7,8 +7,9 @@ import * as State from './state.js';
 
 const GAME_STATE_KEY = 'savedGameState';
 const HAS_SAVED_GAME_KEY = 'hasSavedGame';
-const ZEN_PROGRESS_KEY = 'zenModeProgress';
-const ZEN_GAME_STATE_KEY = 'savedZenGameState'; // New key for Zen game state
+const ZEN_PROGRESS_KEY = 'zenModeProgress'; // Keep for stats, but not for active game state
+const ZEN_GAME_STATE_KEY = 'savedZenGameState';
+export const HAS_SAVED_ZEN_GAME_KEY = 'hasSavedZenGame'; // Export the key name
 
 // Save current game state to localStorage (for non-Zen modes)
 export function saveGameState() {
@@ -42,12 +43,15 @@ export function saveGameState() {
 
 // Load standard game state
 export function loadGameState() {
-    const savedState = localStorage.getItem(GAME_STATE_KEY);
-    if (!savedState) return null;
+    const savedStateString = localStorage.getItem(GAME_STATE_KEY);
+    if (!savedStateString) {
+        return null;
+    }
     try {
-        return JSON.parse(savedState);
+        const parsedState = JSON.parse(savedStateString);
+        return parsedState;
     } catch (error) {
-        console.error('Error loading saved game state:', error);
+        console.error('[Storage] Error parsing saved game state JSON:', error);
         clearSavedGame(); // Clear corrupted state
         return null;
     }
@@ -62,7 +66,7 @@ export function clearSavedGame() {
 // --- Zen Mode Progress Storage (Level Only) ---
 
 /**
- * Saves the current Zen Mode level to localStorage.
+ * Saves the current Zen Mode level to localStorage. (Potentially deprecated for active state)
  */
 export function saveZenProgress() {
     // This function might become less relevant if full state is saved,
@@ -75,7 +79,7 @@ export function saveZenProgress() {
 }
 
 /**
- * Loads the Zen Mode level from localStorage.
+ * Loads the Zen Mode level from localStorage. (Potentially deprecated for active state)
  * @returns {number | null} The saved level, or null if no progress exists.
  */
 export function loadZenProgress() {
@@ -93,7 +97,7 @@ export function loadZenProgress() {
 }
 
 /**
- * Clears the saved Zen Mode progress (level only) from localStorage.
+ * Clears the saved Zen Mode progress (level only) from localStorage. (Potentially deprecated for active state)
  */
 export function clearZenProgress() {
     localStorage.removeItem(ZEN_PROGRESS_KEY);
@@ -105,7 +109,14 @@ export function clearZenProgress() {
  * Saves the current Zen Mode game state (board, level, timer, etc.) to localStorage.
  */
 export function saveZenGameState() {
-    if (!State.isZenMode || !State.gameActive || State.firstClick) return; // Only save active Zen games
+    // Only save active Zen games that have started (not first click)
+    if (!State.isZenMode || !State.gameActive || State.firstClick) {
+        // If not saving, ensure no stale save flag exists
+        if (localStorage.getItem(HAS_SAVED_ZEN_GAME_KEY)) {
+            clearZenGameState();
+        }
+        return;
+    }
 
     const zenGameState = {
         board: State.gameBoard,
@@ -114,14 +125,14 @@ export function saveZenGameState() {
         mineCount: State.mineCount,
         cellsRevealed: State.cellsRevealed,
         timer: State.timer,
-        flaggedMines: State.flaggedMines,
+        flaggedMines: State.flaggedMines, // Save flagged mine count for consistency
         zenLevel: State.zenLevel,
-        // Note: Speedrun/Safe modes are implicit in Zen (always Safe)
         firstClick: false, // Game is active, so firstClick is false
-        inGameplayMode: true // Always true if saving from pause menu
+        inGameplayMode: true // Assume saving happens during gameplay or pause
     };
 
     localStorage.setItem(ZEN_GAME_STATE_KEY, JSON.stringify(zenGameState));
+    localStorage.setItem(HAS_SAVED_ZEN_GAME_KEY, 'true'); // Set the flag
     console.log("Zen game state saved.");
 }
 
@@ -151,5 +162,6 @@ export function loadZenGameState() {
  */
 export function clearZenGameState() {
     localStorage.removeItem(ZEN_GAME_STATE_KEY);
+    localStorage.removeItem(HAS_SAVED_ZEN_GAME_KEY); // Clear the flag
     console.log("Saved Zen game state cleared.");
 }

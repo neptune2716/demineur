@@ -20,30 +20,48 @@ import * as Statistics from './statistics.js'; // <-- Added this import
 document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     loadPreferences();
-    // Initialize the theme customizer
     ThemeCustomizer.initColorCustomizer();
-    
-    // Initialize statistics UI
     StatisticsUI.initStatisticsUI();
-    
-    // Initialize tutorial system
     Tutorial.initTutorial();
-    
-    // Check for saved game state
-    if (localStorage.getItem('hasSavedGame') === 'true') {
-        if (loadGameState()) {
-            return;
+
+    // --- Game State Loading Logic ---
+    let gameLoaded = false;
+
+    // 1. Check for saved Zen Game State first
+    if (localStorage.getItem(Storage.HAS_SAVED_ZEN_GAME_KEY) === 'true') {
+        console.log("Attempting to load saved Zen game...");
+        if (loadAndResumeZenGame()) {
+            console.log("Saved Zen game loaded successfully.");
+            gameLoaded = true;
+        } else {
+            console.warn("Failed to load saved Zen game, clearing state.");
+            Storage.clearZenGameState(); // Clear potentially corrupted state
         }
     }
-    
-    // Always set Easy mode as default when starting/refreshing the game
-    if (Config.difficulties['easy']) {
-        const { rows, columns, mines } = Config.difficulties['easy'];
-        State.setGameDimensions(rows, columns, mines);
+
+    // 2. If no Zen game loaded, check for standard saved game
+    if (!gameLoaded && localStorage.getItem('hasSavedGame') === 'true') {
+        console.log("Attempting to load standard saved game...");
+        if (loadStandardGameState()) { // Renamed original loadGameState to loadStandardGameState
+            console.log("Standard saved game loaded successfully.");
+            gameLoaded = true;
+        } else {
+            console.warn("Failed to load standard saved game, clearing state.");
+            Storage.clearSavedGame(); // Clear potentially corrupted state
+        }
     }
-    
-    // Initialize with default settings (now including Easy mode dimensions)
-    UI.initializeGame();
+
+    // 3. If no game was loaded, initialize normally
+    if (!gameLoaded) {
+        console.log("No saved game found or loaded, initializing new game (Easy default).");
+        // Default to Easy mode if no game loaded
+        if (Config.difficulties['easy']) {
+            const { rows, columns, mines } = Config.difficulties['easy'];
+            State.setGameDimensions(rows, columns, mines);
+            State.setDifficulty('easy'); // Explicitly set difficulty state
+        }
+        UI.initializeGame(); // Initialize UI for a new game
+    }
 });
 
 // Set up all event listeners for the game
@@ -404,56 +422,106 @@ function setDifficulty(difficulty) {
     }
 }
 
-// Load game state from localStorage
-function loadGameState() {
-    // Don't load standard saved game if Zen progress exists
-    if (Storage.loadZenProgress()) {
-        console.log("Zen progress found, skipping standard game load.");
-        return false; // Prevent standard load
-    }
-
-    const savedState = localStorage.getItem('savedGameState');
+// Load STANDARD game state from localStorage (renamed from loadGameState)
+function loadStandardGameState() {
+    const savedState = Storage.loadGameState(); // Use the loader from storage.js
     if (!savedState) return false;
-    
+
     try {
-        const gameState = JSON.parse(savedState);
         // Restore game dimensions and state
-        State.setGameDimensions(gameState.rows, gameState.columns, gameState.mineCount);
-        State.setCellsRevealed(gameState.cellsRevealed);
-        State.setTimer(gameState.timer);
-        State.setFlaggedMines(gameState.flaggedMines);
-        State.setFirstClick(false);
+        State.setGameDimensions(savedState.rows, savedState.columns, savedState.mineCount);
+        State.setCellsRevealed(savedState.cellsRevealed);
+        State.setTimer(savedState.timer);
+        State.setFlaggedMines(savedState.flaggedMines);
+        State.setFirstClick(false); // Saved games are never first click
         State.setGameActive(true);
-        
+        State.setDifficulty(savedState.difficulty || 'custom'); // Restore difficulty
+        State.setSpeedrunMode(savedState.speedrunMode || false);
+        State.setSafeMode(savedState.safeMode || false);
+        State.setZenMode(false); // Ensure Zen mode is off
+
         // Update CSS variables for grid
         document.documentElement.style.setProperty('--rows', State.rows);
         document.documentElement.style.setProperty('--columns', State.columns);
+
         // Restore the game board
-        State.setGameBoard(gameState.board);
-        
+        State.setGameBoard(savedState.board);
+
         // Update UI
-        UI.minesCounterElement.textContent = State.mineCount - document.querySelectorAll('.cell.flagged').length;
+        UI.updateMinesCounter(); // Use the function to correctly calculate remaining flags
         UI.timerElement.textContent = State.timer;
-        
+        UI.updateModeIndicators(); // Update main screen indicators
+        UI.updateDifficultyIndicator(); // Update difficulty label
+
         // Render the board
         UI.renderSavedBoard();
-        
+
         // Start timer
         UI.startTimer();
         document.body.classList.add('game-active');
-        
+
         // Restore UI state (game playing or menu view)
-        if (gameState.inGameplayMode) {
-            // If we were in gameplay mode, transition to gameplay UI
+        if (savedState.inGameplayMode) {
             UI.transitionToGameplay();
         } else {
-            // If we were in menu mode, make sure we're in the main screen
+            // Should ideally not happen if saved correctly, but reset just in case
             UI.resetToMainScreen();
         }
-        
+
         return true;
     } catch (error) {
-        console.error('Error loading saved game:', error);
+        console.error('Error applying loaded standard game state:', error);
+        Storage.clearSavedGame(); // Clear corrupted state
+        return false;
+    }
+}
+
+// Load and resume ZEN game state from localStorage
+function loadAndResumeZenGame() {
+    const zenGameState = Storage.loadZenGameState();
+    if (!zenGameState) return false;
+
+    try {
+        // Restore game dimensions and state
+        State.setGameDimensions(zenGameState.rows, zenGameState.columns, zenGameState.mineCount);
+        State.setCellsRevealed(zenGameState.cellsRevealed);
+        State.setTimer(zenGameState.timer);
+        State.setFlaggedMines(zenGameState.flaggedMines);
+        State.setFirstClick(false); // Saved games are never first click
+        State.setGameActive(true);
+        State.setZenMode(true); // Set Zen mode ON
+        State.setZenLevel(zenGameState.zenLevel);
+        State.setDifficulty('zen'); // Set difficulty state for Zen
+        // Speedrun/Safe modes are implicitly handled by Zen mode logic
+
+        // Update CSS variables for grid
+        document.documentElement.style.setProperty('--rows', State.rows);
+        document.documentElement.style.setProperty('--columns', State.columns);
+
+        // Restore the game board
+        State.setGameBoard(zenGameState.board);
+
+        // Update UI
+        UI.updateMinesCounter();
+        UI.timerElement.textContent = State.timer;
+        UI.updateZenLevelIndicator(); // Show and update Zen level
+        document.getElementById('game-title').textContent = 'Zen Mode'; // Set title
+        UI.updateModeIndicators(); // Hide standard mode indicators
+
+        // Render the board
+        UI.renderSavedBoard();
+
+        // Start timer
+        UI.startTimer();
+        document.body.classList.add('game-active');
+
+        // Always transition to gameplay for a saved Zen game
+        UI.transitionToGameplay();
+
+        return true;
+    } catch (error) {
+        console.error('Error applying loaded Zen game state:', error);
+        Storage.clearZenGameState(); // Clear corrupted state
         return false;
     }
 }
