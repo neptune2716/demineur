@@ -13,18 +13,12 @@ import { generateSolvableBoard } from './safe-board.js';
 
 // Handle left-click on cell
 export function handleLeftClick(event) {
-    if (!State.gameActive) return;
-    // Add ripple effect on click
-    addRippleEffect(event.target);
     handleMouseClick(event, "left");
 }
 
 // Handle right-click on cell
 export function handleRightClick(event) {
     event.preventDefault();
-    if (!State.gameActive) return;
-    // Add ripple effect on right click
-    addRippleEffect(event.target);
     handleMouseClick(event, "right");
 }
 
@@ -49,6 +43,10 @@ function addRippleEffect(element) {
 
 // Unified mouse click handler that uses controller settings
 export function handleMouseClick(event, button) {
+    // Moved gameActive check and ripple effect here
+    if (!State.gameActive) return;
+    addRippleEffect(event.target);
+
     const x = parseInt(event.target.dataset.x);
     const y = parseInt(event.target.dataset.y);
     const cell = State.gameBoard[y][x];
@@ -301,40 +299,60 @@ export function toggleFlag(x, y, skipSound = false) {
     }
 }
 
-// Handle clicking on a number (chord)
-export function handleNumberClick(x, y) {
-    const cell = State.gameBoard[y][x];
-    if (!cell.isRevealed || cell.adjacentMines === 0) return;
-    
+// Helper function to get info about adjacent cells
+function getAdjacentCellInfo(x, y) {
     let flaggedCount = 0;
+    let unrevealedCount = 0;
     const adjacentCells = [];
-    let actionTaken = false; // Flag to track if cells were revealed
-    
+    const unrevealedCells = [];
+    const flaggedCells = [];
+
     for (let dy = -1; dy <= 1; dy++) {
         for (let dx = -1; dx <= 1; dx++) {
             if (dx === 0 && dy === 0) continue;
-            
+
             const nx = x + dx;
             const ny = y + dy;
-            
+
             if (nx >= 0 && nx < State.columns && ny >= 0 && ny < State.rows) {
-                adjacentCells.push({ x: nx, y: ny });
-                if (State.gameBoard[ny][nx].isFlagged) {
-                    flaggedCount++;
+                const adjacentCell = State.gameBoard[ny][nx];
+                const pos = { x: nx, y: ny };
+                adjacentCells.push(pos);
+
+                if (!adjacentCell.isRevealed) {
+                    if (adjacentCell.isFlagged) {
+                        flaggedCount++;
+                        flaggedCells.push(pos);
+                    } else {
+                        unrevealedCount++;
+                        unrevealedCells.push(pos);
+                    }
                 }
             }
         }
     }
-    
+
+    return { flaggedCount, unrevealedCount, adjacentCells, unrevealedCells, flaggedCells };
+}
+
+// Handle clicking on a number (chord)
+export function handleNumberClick(x, y) {
+    const cell = State.gameBoard[y][x];
+    if (!cell.isRevealed || cell.adjacentMines === 0) return;
+
+    const { flaggedCount, adjacentCells } = getAdjacentCellInfo(x, y);
+    let actionTaken = false; // Flag to track if cells were revealed
+
     if (flaggedCount === cell.adjacentMines) {
         adjacentCells.forEach(pos => {
-            if (!State.gameBoard[pos.y][pos.x].isFlagged && !State.gameBoard[pos.y][pos.x].isRevealed) {
+            const adjacentCell = State.gameBoard[pos.y][pos.x];
+            if (!adjacentCell.isFlagged && !adjacentCell.isRevealed) {
                 revealCell(pos.x, pos.y);
                 actionTaken = true; // Mark that an action occurred
             }
         });
     }
-    
+
     // Save game state if an action was taken
     if (actionTaken && State.gameActive && !State.firstClick) {
         if (State.isZenMode) {
@@ -348,78 +366,50 @@ export function handleNumberClick(x, y) {
 // Handle auto-flag on a number
 export function handleAutoFlag(x, y, isAutoFlagAction = false) {
     if (!State.speedrunMode) return;
-    
+
     const cell = State.gameBoard[y][x];
     if (!cell.isRevealed || cell.adjacentMines === 0) return;
-    
-    let unrevealedCount = 0;
-    let currentFlagged = 0;
-    const unrevealedCells = [];
-    const flaggedCells = [];
+
+    const { flaggedCount, unrevealedCount, unrevealedCells } = getAdjacentCellInfo(x, y);
     let actionTaken = false; // Flag to track if cells were flagged or revealed
-    
-    for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-            if (dx === 0 && dy === 0) continue;
-            
-            const nx = x + dx;
-            const ny = y + dy;
-            
-            if (nx >= 0 && nx < State.columns && ny >= 0 && ny < State.rows) {
-                if (!State.gameBoard[ny][nx].isRevealed) {
-                    if (State.gameBoard[ny][nx].isFlagged) {
-                        currentFlagged++;
-                        flaggedCells.push({ x: nx, y: ny });
-                    } else {
-                        unrevealedCount++;
-                        unrevealedCells.push({ x: nx, y: ny });
-                    }
-                }
-            }
-        }
-    }
-    
-    if (cell.adjacentMines === currentFlagged + unrevealedCount && unrevealedCount > 0) {
+
+    // Condition to auto-flag remaining unrevealed cells
+    if (cell.adjacentMines === flaggedCount + unrevealedCount && unrevealedCount > 0) {
         if (isAutoFlagAction) {
             Audio.playSound('flag-sound');
         }
-        
+
         unrevealedCells.forEach(pos => {
-            toggleFlag(pos.x, pos.y, true);
-            actionTaken = true; // Mark that an action occurred
+            toggleFlag(pos.x, pos.y, true); // skipSound = true
+            actionTaken = true;
         });
-        
-        // Save game state after auto-flagging
-        if (actionTaken && State.gameActive && !State.firstClick) {
-            if (State.isZenMode) {
-                Storage.saveZenGameState();
-            } else {
-                Storage.saveGameState();
-            }
-        }
-        return true;
-    } else if (cell.adjacentMines === currentFlagged && unrevealedCount > 0) {
+
+    // Condition to auto-reveal remaining unrevealed cells (like chording)
+    } else if (cell.adjacentMines === flaggedCount && unrevealedCount > 0) {
         if (isAutoFlagAction) {
             Audio.playSound('click-sound');
         }
-        
+
         unrevealedCells.forEach(pos => {
-            revealCell(pos.x, pos.y);
-            actionTaken = true; // Mark that an action occurred
-        });
-        
-        // Save game state after chording
-        if (actionTaken && State.gameActive && !State.firstClick) {
-            if (State.isZenMode) {
-                Storage.saveZenGameState();
-            } else {
-                Storage.saveGameState();
+            // Check again inside loop in case revealCell changes state
+            if (!State.gameBoard[pos.y][pos.x].isRevealed && !State.gameBoard[pos.y][pos.x].isFlagged) {
+                 revealCell(pos.x, pos.y);
+                 actionTaken = true;
             }
-        }
-        return true;
+        });
     }
-    
-    return false;
+
+    // Save game state if an action was taken
+    if (actionTaken && State.gameActive && !State.firstClick) {
+        if (State.isZenMode) {
+            Storage.saveZenGameState();
+        } else {
+            Storage.saveGameState();
+        }
+    }
+
+    // Return true if an action was taken, false otherwise
+    return actionTaken;
 }
 
 // Check win condition
@@ -431,96 +421,142 @@ export function checkWinCondition() {
 
 // Game over handler
 export function gameOver(isWin) {
-    const wasInZenMode = State.isZenMode;
-
+    // --- Common Setup ---
     State.setGameActive(false);
     clearInterval(State.timerInterval);
     document.body.classList.remove('game-active');
-    
+
     if (isWin) {
         Audio.playSound('win-sound');
     } else {
         Audio.playSound('lose-sound');
     }
-    
+
+    revealAllMines(isWin); // Reveal mines and mark misflags
+
+    // --- Mode-Specific Handling ---
+    if (State.isZenMode) {
+        handleZenGameOver(isWin);
+    } else {
+        handleNormalGameOver(isWin);
+    }
+
+    // --- Common Cleanup ---
+    // Update main page stats (called here to ensure it happens after stats are recorded)
+    UI.updateMainPageStats();
+}
+
+// Helper to reveal all mines and mark misflagged cells at game end
+function revealAllMines(isWin) {
     for (let y = 0; y < State.rows; y++) {
         for (let x = 0; x < State.columns; x++) {
             const cell = State.gameBoard[y][x];
-            
+            const cellElement = UI.getCellElement(x, y);
+
             if (cell.isMine) {
-                const cellElement = UI.getCellElement(x, y);
                 cellElement.classList.add('mine');
-                
+                // Auto-flag remaining mines on win
                 if (isWin && !cell.isFlagged) {
-                    cell.isFlagged = true;
-                    cellElement.classList.add('flagged');
+                    cell.isFlagged = true; // Update state
+                    cellElement.classList.add('flagged'); // Update UI
+                }
+            } else if (cell.isFlagged) {
+                // Mark incorrectly flagged cells if it's a loss
+                if (!isWin) {
+                    cellElement.classList.add('misflagged');
                 }
             }
         }
     }
-    
-    if (wasInZenMode) {
-        Storage.clearZenGameState();
+    // Update the counter one last time after potential auto-flagging on win
+    if (isWin) {
+        UI.updateMinesCounter();
+    }
+}
 
-        if (isWin) {
-            State.incrementZenLevel();
-            Storage.saveZenProgress();
-            
-            UI.updateZenLevelIndicator();
-            
-            import('./notification.js').then(Notification => {
-                Notification.showSuccess(`Level ${State.zenLevel - 1} Complete! Starting Level ${State.zenLevel}...`);
-            });
-            
-            UI.animateLevelUp();
-            
-            setTimeout(() => {
-                UI.startZenLevel(State.zenLevel);
-            }, 1500);
-        } else {
-            import('./statistics.js').then(Statistics => {
-                Statistics.recordGameResult(
-                    false,
-                    State.zenLevel,
-                    'zen',
-                    { rows: State.rows, columns: State.columns, mines: State.mineCount },
-                    { cellsRevealed: State.cellsRevealed, wrongFlags: document.querySelectorAll('.cell.flagged:not(.mine)').length }
-                );
-                UI.updateMainPageStats(); 
-            });
-            UI.showZenLossModal(State.zenLevel);
-            Storage.clearZenProgress(); 
-        }
-    } else {
-        Storage.clearSavedGame();
+// Handles game over logic specific to Zen Mode
+function handleZenGameOver(isWin) {
+    Storage.clearZenGameState(); // Clear the active game state regardless of win/loss
 
-        import('./statistics.js').then(Statistics => {
-            let difficulty = 'custom';
-            for (const [diffName, config] of Object.entries(Config.difficulties)) {
-                if (config.rows === State.rows && 
-                    config.columns === State.columns && 
-                    config.mines === State.mineCount) {
-                    difficulty = diffName;
-                    break;
-                }
-            }
+    if (isWin) {
+        // --- Zen Win Logic ---
+        const previousLevel = State.zenLevel;
+        State.incrementZenLevel();
+        // Statistics module likely handles best level tracking now, but save progress just in case
+        Storage.saveZenProgress(); 
 
-            const gameStats = {
-                cellsRevealed: State.cellsRevealed,
-                wrongFlags: document.querySelectorAll('.cell.flagged:not(.mine)').length
-            };
+        UI.updateZenLevelIndicator(); // Update UI to show new level
 
-            Statistics.recordGameResult(
-                isWin, 
-                State.timer,
-                difficulty,
-                { rows: State.rows, columns: State.columns, mines: State.mineCount },
-                gameStats
-            );
-            
-            UI.updateMainPageStats();
+        // Use dynamic import for notification
+        import('./notification.js').then(Notification => {
+            Notification.showSuccess(`Level ${previousLevel} Complete! Starting Level ${State.zenLevel}...`);
         });
-        
-        UI.showResultModal(isWin, State.timer);
+
+        UI.animateLevelUp(); // Animate the level indicator
+
+        // Start the next level after a delay
+        setTimeout(() => {
+            UI.startZenLevel(State.zenLevel);
+        }, 1500); // Delay to allow user to see the board/notification
+
+    } else {
+        // --- Zen Loss Logic ---
+        // Record statistics for the lost level
+        import('./statistics.js').then(Statistics => {
+            Statistics.recordGameResult(
+                false, // isWin = false
+                State.zenLevel, // Value is the level lost
+                'zen',
+                { rows: State.rows, columns: State.columns, mines: State.mineCount },
+                { 
+                    cellsRevealed: State.cellsRevealed, 
+                    wrongFlags: document.querySelectorAll('.cell.misflagged').length // Count misflagged cells
+                }
+            );
+        });
+
+        // Show the Zen loss modal
+        UI.showZenLossModal(State.zenLevel);
+
+        // Clear progress tracking (level only) - might be redundant
+        Storage.clearZenProgress(); 
     }
+}
+
+// Handles game over logic specific to Normal Modes
+function handleNormalGameOver(isWin) {
+    Storage.clearSavedGame(); // Clear any saved state for this game
+
+    // Record statistics
+    import('./statistics.js').then(Statistics => {
+        // Determine difficulty string ('easy', 'medium', 'hard', 'custom')
+        let difficulty = 'custom';
+        // Use the imported Config directly
+        for (const [diffName, config] of Object.entries(Config.difficulties)) {
+            if (config.rows === State.rows &&
+                config.columns === State.columns &&
+                config.mines === State.mineCount) {
+                difficulty = diffName; 
+                break;
+            }
+        }
+
+        const gameStats = {
+            cellsRevealed: State.cellsRevealed,
+            wrongFlags: document.querySelectorAll('.cell.misflagged').length, // Count misflagged cells
+            speedrunMode: State.speedrunMode, // Pass mode info
+            safeMode: State.safeMode
+        };
+
+        Statistics.recordGameResult(
+            isWin,
+            State.timer, // Value is the time taken
+            difficulty,
+            { rows: State.rows, columns: State.columns, mines: State.mineCount },
+            gameStats
+        );
+    });
+
+    // Show the standard result modal
+    UI.showResultModal(isWin, State.timer);
 }
