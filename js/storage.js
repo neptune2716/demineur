@@ -109,8 +109,8 @@ export function clearZenProgress() {
  * Saves the current Zen Mode game state (board, level, timer, etc.) to localStorage.
  */
 export function saveZenGameState() {
-    // Only save active Zen games that have started (not first click)
-    if (!State.isZenMode || !State.gameActive || State.firstClick) {
+    // Only save if in Zen Mode and game is active
+    if (!State.isZenMode || !State.gameActive) {
         // If not saving, ensure no stale save flag exists
         if (localStorage.getItem(HAS_SAVED_ZEN_GAME_KEY)) {
             clearZenGameState();
@@ -127,7 +127,7 @@ export function saveZenGameState() {
         timer: State.timer,
         flaggedMines: State.flaggedMines, // Save flagged mine count for consistency
         zenLevel: State.zenLevel,
-        firstClick: false, // Game is active, so firstClick is false
+        firstClick: State.firstClick, // Preserve first click state
         inGameplayMode: true // Assume saving happens during gameplay or pause
     };
 

@@ -185,11 +185,17 @@ function setupEventListeners() {
         safeModeToggle.parentElement.classList.add('in-game-disabled');
         
         document.getElementById('menu-modal').style.display = 'block';
-    });
-    
-    document.getElementById('quit-game').addEventListener('click', function() {
+    });    document.getElementById('quit-game').addEventListener('click', function() {
         Audio.playSound('click-sound');
         UI.hidePauseMenu();
+        
+        // If in Zen Mode, save the current state before quitting (even on first click)
+        if (State.isZenMode && State.gameActive) {
+            Storage.saveZenGameState(); // Save the full Zen game state
+            Storage.saveZenProgress(); // Also save the level progress
+            console.log("Zen Mode game saved for later continuation");
+        }
+        
         // Reset to main screen and reinitialize the game
         UI.resetToMainScreen();
         UI.initializeGame();
@@ -297,12 +303,21 @@ function setupEventListeners() {
         document.getElementById('game-title').textContent = 'Zen Mode';
         
         UI.startZenLevel(1);
-    });
-
-    document.getElementById('zen-continue').addEventListener('click', function() {
+    });    document.getElementById('zen-continue').addEventListener('click', function() {
         Audio.playSound('click-sound');
-        const savedLevel = Storage.loadZenProgress() || 1;
         UI.hideZenStartModal();
+        
+        // First check if there's a saved Zen game state (complete board state)
+        if (localStorage.getItem(Storage.HAS_SAVED_ZEN_GAME_KEY) === 'true') {
+            // Load the complete saved game state
+            if (loadAndResumeZenGame()) {
+                console.log("Successfully resumed saved Zen game");
+                return; // Exit early as game is already loaded
+            }
+        }
+        
+        // If no saved game state or loading failed, fall back to just loading the level
+        const savedLevel = Storage.loadZenProgress() || 1;
         
         // Immediately change title to Zen Mode before starting the level
         document.getElementById('game-title').textContent = 'Zen Mode';
@@ -479,15 +494,17 @@ function loadStandardGameState() {
 // Load and resume ZEN game state from localStorage
 function loadAndResumeZenGame() {
     const zenGameState = Storage.loadZenGameState();
-    if (!zenGameState) return false;
-
-    try {
+    if (!zenGameState) return false;    try {
         // Restore game dimensions and state
         State.setGameDimensions(zenGameState.rows, zenGameState.columns, zenGameState.mineCount);
         State.setCellsRevealed(zenGameState.cellsRevealed);
         State.setTimer(zenGameState.timer);
         State.setFlaggedMines(zenGameState.flaggedMines);
-        State.setFirstClick(false); // Saved games are never first click
+        
+        // Properly restore first click state from saved state
+        // This ensures if we quit before making our first click, we'll still generate a new board when we come back
+        State.setFirstClick(zenGameState.firstClick !== undefined ? zenGameState.firstClick : false);
+        
         State.setGameActive(true);
         State.setZenMode(true); // Set Zen mode ON
         State.setZenLevel(zenGameState.zenLevel);

@@ -636,12 +636,32 @@ export function startZenLevel(level) {
  * Shows the Zen Mode start modal.
  */
 export function showZenStartModal() {
-    const savedLevel = Storage.loadZenProgress();
+    // Get both progress sources
+    const savedProgressLevel = Storage.loadZenProgress();
+    const hasSavedZenGame = localStorage.getItem(Storage.HAS_SAVED_ZEN_GAME_KEY) === 'true';
+    
+    // If there's a saved game state, get the level from there
+    let gameStateLevel = null;
+    if (hasSavedZenGame) {
+        const savedZenGame = Storage.loadZenGameState();
+        if (savedZenGame && typeof savedZenGame.zenLevel === 'number') {
+            gameStateLevel = savedZenGame.zenLevel;
+        }
+    }
+    
+    // Use the highest level from either source
+    const actualLevel = Math.max(
+        gameStateLevel || 0,  // From saved game state
+        savedProgressLevel || 0  // From progress tracking
+    );
+    
     const continueButton = document.getElementById('zen-continue');
     const continueLevelSpan = document.getElementById('zen-continue-level');
 
-    if (savedLevel && savedLevel > 1) {
-        continueLevelSpan.textContent = savedLevel;
+    // Show continue button if we have a valid level to continue at
+    if (hasSavedZenGame || (actualLevel && actualLevel > 1)) {
+        // Display the actual level, or default to 1 if somehow both are 0
+        continueLevelSpan.textContent = actualLevel || 1;
         continueButton.style.display = 'inline-block';
     } else {
         continueButton.style.display = 'none';
