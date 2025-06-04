@@ -240,6 +240,33 @@ export function recordGameResult(isWin, value, difficulty, gameConfig = null, ga
                 }
             }
 
+            // Record game history for wins
+            const record = {
+                date: now.toISOString(),
+                time,
+                speedrunMode: !!gameStats.speedrunMode,
+                safeMode: !!gameStats.safeMode
+            };
+
+            if (difficulty === 'easy' || difficulty === 'medium' || difficulty === 'hard') {
+                if (!Array.isArray(stats.gameHistory[difficulty])) {
+                    stats.gameHistory[difficulty] = [];
+                }
+                stats.gameHistory[difficulty].push(record);
+                if (stats.gameHistory[difficulty].length > 100) {
+                    stats.gameHistory[difficulty] = stats.gameHistory[difficulty].slice(-100);
+                }
+            } else if (difficulty === 'custom' && gameConfig) {
+                const configKey = `${gameConfig.rows}_${gameConfig.columns}_${gameConfig.mines}`;
+                if (!stats.gameHistory.custom[configKey]) {
+                    stats.gameHistory.custom[configKey] = [];
+                }
+                stats.gameHistory.custom[configKey].push(record);
+                if (stats.gameHistory.custom[configKey].length > 100) {
+                    stats.gameHistory.custom[configKey] = stats.gameHistory.custom[configKey].slice(-100);
+                }
+            }
+
         } else {
             stats.games.lost++;
             // Reset win streak on a loss
