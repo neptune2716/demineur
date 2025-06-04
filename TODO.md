@@ -103,7 +103,7 @@ Implemented calming background audio options (forest, rain, ocean)
 - [ ] **Mobile Support**
   - Responsive design for mobile screens
   - Touch controls optimization
-  - Pinch to zoom on larger boardsI
+  - Pinch to zoom on larger boards
 
 - [X] **Performance Optimizations**
   - Improve rendering for very large custom boards
