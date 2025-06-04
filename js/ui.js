@@ -15,7 +15,7 @@ export const timerElement = document.getElementById('timer');
 export const customModalElement = document.getElementById('custom-modal');
 export const resultModalElement = document.getElementById('result-modal');
 export const zenStartModalElement = document.getElementById('zen-start-modal');
-export const zenLossModalElement = document.getElementById('zen-loss-modal'); // Fixed missing parenthesis
+export const zenLossModalElement = document.getElementById('zen-loss-modal'); // Cache Zen loss modal element
 
 // Set the game theme
 export function setTheme(theme) {
