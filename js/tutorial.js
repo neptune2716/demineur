@@ -228,7 +228,7 @@ function checkIfShowTutorial() {
     // Get statistics directly from localStorage to check if games have been played
     let hasPlayedGames = false;
     try {
-        const stats = JSON.parse(localStorage.getItem('statistics'));
+        const stats = JSON.parse(localStorage.getItem('gameStatistics'));
         hasPlayedGames = stats && stats.games && stats.games.played > 0;
     } catch (e) {
         console.log('No valid statistics found in localStorage');
