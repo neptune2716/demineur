@@ -126,8 +126,8 @@ export function startCustomGame() {
     const heightInput = document.getElementById('height');
     const minesInput = document.getElementById('mines');
     
-    const rows = Math.max(5, Math.min(100, parseInt(heightInput.value) || 10));
-    const columns = Math.max(5, Math.min(100, parseInt(widthInput.value) || 10));
+    const rows = Math.max(5, Math.min(500, parseInt(heightInput.value) || 10));
+    const columns = Math.max(5, Math.min(500, parseInt(widthInput.value) || 10));
     
     // Calculate maximum mines allowed (30% of total tiles)
     const totalTiles = rows * columns;
