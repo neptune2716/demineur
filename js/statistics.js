@@ -381,7 +381,7 @@ export function getStreakInfo() {
 /**
  * Marks that a respawn was used in the current Zen run.
  */
-export function markZenRespawUsed() {
+export function markZenRespawnUsed() {
     const stats = loadStatistics();
     if (stats.zenProgress.currentRun) {
         stats.zenProgress.currentRun.usedRespawns = true;

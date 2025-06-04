@@ -334,7 +334,7 @@ function setupEventListeners() {
     document.getElementById('zen-loss-replay').addEventListener('click', function() {
         Audio.playSound('click-sound');
         UI.hideZenLossModal();
-        Statistics.markZenRespawUsed(); // Mark that a respawn was used
+        Statistics.markZenRespawnUsed(); // Mark that a respawn was used
         // Replay the current level (which is stored in State.zenLevel)
         UI.startZenLevel(State.zenLevel);
     });
