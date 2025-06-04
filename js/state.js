@@ -18,6 +18,8 @@ export let timerInterval;
 export let flaggedMines = 0;
 export let speedrunMode = true;
 export let safeMode = false; // Prevent 50/50 chance situations
+// Store the user's preference before Zen Mode overrides it
+export let previousSafeMode = false;
 export let difficulty = 'easy'; // Track current difficulty
 export let isZenMode = false; // Track if Zen Mode is active
 export let zenLevel = 1; // Track current Zen Mode level
@@ -37,6 +39,10 @@ export function setSpeedrunMode(value) {
 
 export function setSafeMode(value) {
     safeMode = value;
+}
+
+export function setPreviousSafeMode(value) {
+    previousSafeMode = value;
 }
 
 export function incrementCellsRevealed() {

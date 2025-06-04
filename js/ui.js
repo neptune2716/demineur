@@ -312,11 +312,19 @@ export function resetToMainScreen() {
         import('./statistics.js').then(Statistics => {
             Statistics.resetZenRun();
         });
+
+        // Restore the user's previous safe mode preference
+        State.setSafeMode(State.previousSafeMode);
+        const safeToggle = document.getElementById('safe-mode-toggle');
+        if (safeToggle) {
+            safeToggle.checked = State.safeMode;
+        }
     }
-    
+
     // Update difficulty indicator back to normal and hide Zen indicator
     updateDifficultyIndicator();
     updateZenLevelIndicator();
+    updateModeIndicators();
 }
 
 /**
@@ -594,6 +602,11 @@ function getZenLevelConfig(level) {
  * @param {number} level - The level to start.
  */
 export function startZenLevel(level) {
+    // If we're entering Zen Mode for the first time, remember the current safe mode setting
+    if (!State.isZenMode) {
+        State.setPreviousSafeMode(State.safeMode);
+    }
+
     // Set Zen Mode state
     State.setZenMode(true);
     State.setZenLevel(level);
@@ -604,6 +617,10 @@ export function startZenLevel(level) {
 
     // Ensure Safe Mode is enabled for Zen Mode
     State.setSafeMode(true);
+    const safeToggle = document.getElementById('safe-mode-toggle');
+    if (safeToggle) {
+        safeToggle.checked = true;
+    }
     
     // Update the Zen level indicator BEFORE initializing the game
     updateZenLevelIndicator();
