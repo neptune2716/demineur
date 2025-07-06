@@ -189,10 +189,15 @@ function setupEventListeners() {
         Audio.playSound('click-sound');
         UI.hidePauseMenu();
         
-        // If in Zen Mode, save the current state so player can continue later
+        // Handle game state based on mode when quitting
         if (State.isZenMode && State.gameActive) {
-            Storage.saveZenGameState(); // Save zen game state when quitting
+            // For Zen Mode: save the current state so player can continue later
+            Storage.saveZenGameState();
             console.log("Zen Mode game saved (user quit zen mode)");
+        } else if (!State.isZenMode && State.gameActive) {
+            // For normal games: clear the saved state since user is quitting to menu
+            Storage.clearSavedGame();
+            console.log("Normal game state cleared (user quit to menu)");
         }
         
         // Reset to main screen and reinitialize the game
