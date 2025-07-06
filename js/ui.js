@@ -301,13 +301,13 @@ export function resetToMainScreen() {
     const newGameInGameButton = document.getElementById('new-game-in-game');
     if (newGameInGameButton) {
         newGameInGameButton.style.display = 'inline-block';
-    }
-    
-    // If quitting Zen Mode, reset the state
+    }      // If quitting Zen Mode, reset the state but preserve progress
     if (State.isZenMode) {
         State.setZenMode(false);
         State.setZenLevel(1);
-        Storage.clearZenProgress(); // Clear saved progress when returning to menu
+        // Don't clear progress when quitting - let user continue later
+        // Storage.clearZenProgress(); // Commented out - preserve progress
+        // Storage.clearZenGameState(); // Commented out - preserve game state
         // Also reset the current run statistics
         import('./statistics.js').then(Statistics => {
             Statistics.resetZenRun();
@@ -337,6 +337,16 @@ export function showPauseMenu() {
     const pauseMenu = document.getElementById('pause-menu');
     pauseMenu.style.display = 'block';
     pauseMenu.classList.add('centered-modal');
+    
+    // Update quit button text based on game mode
+    const quitButton = document.getElementById('quit-game');
+    if (quitButton) {
+        if (State.isZenMode) {
+            quitButton.textContent = 'Quit Game (Progress Will Be Saved)';
+        } else {
+            quitButton.textContent = 'Quit';
+        }
+    }
     
     // Store the current timer interval and clear it
     if (State.timerInterval) {

@@ -71,12 +71,11 @@ function setupEventListeners() {
     nextButton.addEventListener('click', () => {
         Audio.playSound('click-sound');
         navigateTutorial(1);
-    });
-      // Skip button
+    });      // Skip button
     skipButton.addEventListener('click', () => {
         Audio.playSound('click-sound');
         if (dontShowCheckbox.checked) {
-            localStorage.setItem('dontShowTutorial', true);
+            localStorage.setItem('dontShowTutorial', 'true');
         }
         closeTutorial();
     });
@@ -214,6 +213,14 @@ function openTutorialSilent() {
  * Close the tutorial modal
  */
 function closeTutorial() {
+    // Mark tutorial as seen
+    localStorage.setItem('tutorialSeen', 'true');
+    
+    // Check if "don't show again" checkbox is checked and save preference
+    if (dontShowCheckbox && dontShowCheckbox.checked) {
+        localStorage.setItem('dontShowTutorial', 'true');
+    }
+    
     tutorialModal.style.display = 'none';
     tutorialOpen = false;
     Audio.playSound('click-sound');
@@ -224,6 +231,7 @@ function closeTutorial() {
  */
 function checkIfShowTutorial() {
     const dontShow = localStorage.getItem('dontShowTutorial') === 'true';
+    const tutorialSeen = localStorage.getItem('tutorialSeen') === 'true';
     
     // Get statistics directly from localStorage to check if games have been played
     let hasPlayedGames = false;
@@ -236,8 +244,9 @@ function checkIfShowTutorial() {
     
     // Show tutorial if:
     // 1. User hasn't opted out with "don't show" checkbox
-    // 2. User hasn't played any games yet
-    if (!dontShow && !hasPlayedGames) {
+    // 2. User hasn't seen the tutorial before
+    // 3. User hasn't played any games yet
+    if (!dontShow && !tutorialSeen && !hasPlayedGames) {
         // Open tutorial without playing sound on initial load
         openTutorialSilent();
     }

@@ -513,13 +513,11 @@ function handleZenGameOver(isWin) {
                     wrongFlags: document.querySelectorAll('.cell.misflagged').length // Count misflagged cells
                 }
             );
-        });
-
-        // Show the Zen loss modal
+        });        // Show the Zen loss modal
         UI.showZenLossModal(State.zenLevel);
 
-        // Clear progress tracking (level only) - might be redundant
-        Storage.clearZenProgress(); 
+        // Don't clear progress tracking on loss - player should be able to continue from best level
+        // Storage.clearZenProgress(); // Commented out - preserve progress
     }
 }
 

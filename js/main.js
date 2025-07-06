@@ -189,11 +189,10 @@ function setupEventListeners() {
         Audio.playSound('click-sound');
         UI.hidePauseMenu();
         
-        // If in Zen Mode, save the current state before quitting (even on first click)
+        // If in Zen Mode, save the current state so player can continue later
         if (State.isZenMode && State.gameActive) {
-            Storage.saveZenGameState(); // Save the full Zen game state
-            Storage.saveZenProgress(); // Also save the level progress
-            console.log("Zen Mode game saved for later continuation");
+            Storage.saveZenGameState(); // Save zen game state when quitting
+            console.log("Zen Mode game saved (user quit zen mode)");
         }
         
         // Reset to main screen and reinitialize the game
