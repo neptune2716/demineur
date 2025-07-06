@@ -301,13 +301,13 @@ export function resetToMainScreen() {
     const newGameInGameButton = document.getElementById('new-game-in-game');
     if (newGameInGameButton) {
         newGameInGameButton.style.display = 'inline-block';
-    }      // If quitting Zen Mode, reset the state but preserve progress
+    }    // If quitting Zen Mode, reset the state and clear active game (but preserve progress)
     if (State.isZenMode) {
         State.setZenMode(false);
         State.setZenLevel(1);
-        // Don't clear progress when quitting - let user continue later
-        // Storage.clearZenProgress(); // Commented out - preserve progress
-        // Storage.clearZenGameState(); // Commented out - preserve game state
+        // Clear the active game state when returning to menu, but preserve progress level
+        Storage.clearZenGameState(); // Clear active game state
+        // Don't clear progress - Storage.clearZenProgress(); // Keep this commented out
         // Also reset the current run statistics
         import('./statistics.js').then(Statistics => {
             Statistics.resetZenRun();
