@@ -42,6 +42,10 @@ export function createParticles() {
     if (localStorage.getItem('animatedBackground') !== 'true') return;
     
     const container = document.getElementById('particles-container');
+    if (!container) {
+        console.warn('Particles container not found');
+        return;
+    }
     
     // Clear existing particles and create new ones
     container.innerHTML = '';
@@ -81,7 +85,9 @@ export function updateParticles() {
     // Only refresh particles when animation is enabled
     if (localStorage.getItem('animatedBackground') !== 'true') {
         const container = document.getElementById('particles-container');
-        container.innerHTML = '';
+        if (container) {
+            container.innerHTML = '';
+        }
         particlesInitialized = false;
         return;
     }
@@ -104,20 +110,27 @@ export function updateParticles() {
 export function openCustomModal() {
     // Load saved custom settings if they exist
     const savedCustomSettings = localStorage.getItem('customGameSettings');
-    
-    if (savedCustomSettings) {
+      if (savedCustomSettings) {
         const settings = JSON.parse(savedCustomSettings);
-        document.getElementById('width').value = settings.width;
-        document.getElementById('height').value = settings.height;
-        document.getElementById('mines').value = settings.mines;
+        const widthElement = document.getElementById('width');
+        const heightElement = document.getElementById('height');
+        const minesElement = document.getElementById('mines');
+        
+        if (widthElement) widthElement.value = settings.width;
+        if (heightElement) heightElement.value = settings.height;
+        if (minesElement) minesElement.value = settings.mines;
     }
     
-    customModalElement.style.display = 'block';
+    if (customModalElement) {
+        customModalElement.style.display = 'block';
+    }
 }
 
 // Close custom game modal
 export function closeCustomModal() {
-    customModalElement.style.display = 'none';
+    if (customModalElement) {
+        customModalElement.style.display = 'none';
+    }
 }
 
 // Handle custom game settings
@@ -125,6 +138,11 @@ export function startCustomGame() {
     const widthInput = document.getElementById('width');
     const heightInput = document.getElementById('height');
     const minesInput = document.getElementById('mines');
+    
+    if (!widthInput || !heightInput || !minesInput) {
+        console.error('Custom game input elements not found');
+        return;
+    }
     
     const rows = Math.max(5, Math.min(500, parseInt(heightInput.value) || 10));
     const columns = Math.max(5, Math.min(500, parseInt(widthInput.value) || 10));
@@ -173,14 +191,19 @@ export function initializeGame() {
     // Reset game state
     const gameBoard = State.resetGameState();
     clearInterval(State.timerInterval);
-    timerElement.textContent = '0';
+    
+    if (timerElement) {
+        timerElement.textContent = '0';
+    }
     
     // Update CSS variables for grid
     document.documentElement.style.setProperty('--rows', State.rows);
     document.documentElement.style.setProperty('--columns', State.columns);
     
     // Update UI
-    minesCounterElement.textContent = State.mineCount;
+    if (minesCounterElement) {
+        minesCounterElement.textContent = State.mineCount;
+    }
     renderBoard();
     
     // Update statistics on the main page (only if not in Zen Mode)
@@ -212,21 +235,30 @@ export function updateZenLevelIndicator() {
     
     if (State.isZenMode) {
         // Show the indicator and update level
-        zenLevelIndicator.style.display = 'flex';
-        zenCurrentLevel.textContent = State.zenLevel;
+        if (zenLevelIndicator) {
+            zenLevelIndicator.style.display = 'flex';
+        }
+        if (zenCurrentLevel) {
+            zenCurrentLevel.textContent = State.zenLevel;
+        }
         
         // Change the game title to indicate Zen Mode
-        gameTitle.textContent = 'Zen Mode';
+        if (gameTitle) {
+            gameTitle.textContent = 'Zen Mode';
+        }
         
         // Add a class to the body to enable zen-specific styles
         document.body.classList.add('zen-mode-active');
         
-    } else {
-        // Hide the indicator when not in Zen Mode
-        zenLevelIndicator.style.display = 'none';
+    } else {        // Hide the indicator when not in Zen Mode
+        if (zenLevelIndicator) {
+            zenLevelIndicator.style.display = 'none';
+        }
         
         // Restore the original game title
-        gameTitle.textContent = 'Relaxing Minesweeper';
+        if (gameTitle) {
+            gameTitle.textContent = 'Relaxing Minesweeper';
+        }
         
         // Remove zen mode class
         document.body.classList.remove('zen-mode-active');
@@ -238,11 +270,17 @@ export function updateZenLevelIndicator() {
  */
 export function animateLevelUp() {
     const zenLevelIndicator = document.getElementById('zen-level-indicator');
-    zenLevelIndicator.classList.add('level-up-animation');
+    if (!zenLevelIndicator) {
+        console.warn('Zen level indicator not found');
+        return;
+    }
     
-    // Remove the animation class after it completes
+    zenLevelIndicator.classList.add('level-up-animation');
+      // Remove the animation class after it completes
     setTimeout(() => {
-        zenLevelIndicator.classList.remove('level-up-animation');
+        if (zenLevelIndicator) {
+            zenLevelIndicator.classList.remove('level-up-animation');
+        }
     }, 600); // Animation duration + a little extra
 }
 
@@ -255,16 +293,21 @@ export function transitionToGameplay() {
     
     // Hide main screen elements
     const mainScreen = document.getElementById('main-screen');
-    mainScreen.classList.add('hidden');
+    if (mainScreen) {
+        mainScreen.classList.add('hidden');
+    }
     
     // Center the game board
     const gameBoard = document.querySelector('.game-board-container');
-    gameBoard.classList.add('centered');
-    
-    // Show in-game UI
+    if (gameBoard) {
+        gameBoard.classList.add('centered');
+    }
+      // Show in-game UI
     const inGameUI = document.getElementById('in-game-ui');
     setTimeout(() => {
-        inGameUI.classList.add('active');
+        if (inGameUI) {
+            inGameUI.classList.add('active');
+        }
     }, 300); // Small delay for sequential animation
     
     // Show/Hide New Game button based on mode
@@ -321,15 +364,11 @@ export function resetToMainScreen() {
         }
     }
 
-    // Update difficulty indicator back to normal and hide Zen indicator
-    updateDifficultyIndicator();
+    // Update difficulty indicator back to normal and hide Zen indicator    updateDifficultyIndicator();
     updateZenLevelIndicator();
     updateModeIndicators();
 }
 
-/**
- * Show the pause menu
- */
 /**
  * Show the pause menu and pause the timer
  */

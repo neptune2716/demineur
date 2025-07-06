@@ -517,7 +517,6 @@ function handleZenGameOver(isWin) {
         UI.showZenLossModal(State.zenLevel);
 
         // Don't clear progress tracking on loss - player should be able to continue from best level
-        // Storage.clearZenProgress(); // Commented out - preserve progress
     }
 }
 

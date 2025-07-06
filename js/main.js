@@ -160,11 +160,9 @@ function setupEventListeners() {
     document.getElementById('pause-close').addEventListener('click', function() {
         Audio.playSound('click-sound');
         UI.hidePauseMenu();
-    });
-    document.getElementById('open-options-from-pause').addEventListener('click', function() {
+    });    document.getElementById('open-options-from-pause').addEventListener('click', function() {
         Audio.playSound('click-sound');
         // Don't hide the pause menu when opening options
-        // UI.hidePauseMenu(); -- removed
         
         // Disable safe mode and speedrun mode toggles when accessing from pause menu
         const speedrunToggle = document.getElementById('speedrun-toggle');

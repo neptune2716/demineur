@@ -101,13 +101,10 @@ export function setTimerInterval(interval) {
 export function resetGameState() {
     gameActive = true;
     firstClick = true;
-    cellsRevealed = 0;
-    flaggedMines = 0;
+    cellsRevealed = 0;    flaggedMines = 0;
     timer = 0;
 
     // Don't reset zen mode status here, handle it separately
-    // isZenMode = false;
-    // zenLevel = 1;
 
     // Create empty board
     gameBoard = Array.from({ length: rows }, () => 
