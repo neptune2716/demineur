@@ -75,7 +75,14 @@ function loadCustomColors() {
 // Get saved custom colors from localStorage or use defaults
 function getSavedCustomColors() {
     const savedColors = localStorage.getItem('customColors');
-    return savedColors ? JSON.parse(savedColors) : DEFAULT_CUSTOM_COLORS;
+    if (!savedColors) return DEFAULT_CUSTOM_COLORS;
+    
+    try {
+        return JSON.parse(savedColors);
+    } catch (error) {
+        console.warn('Failed to parse saved custom colors:', error);
+        return DEFAULT_CUSTOM_COLORS;
+    }
 }
 
 // Update custom colors as the user adjusts the color pickers
@@ -119,21 +126,42 @@ function updateCustomColor(event) {
         case 'custom-flag':
             customColors.flagColor = color;
             document.documentElement.style.setProperty('--flag-color', color);
-            break;
-    }
+            break;    }
     
     // Save updated colors to localStorage temporarily
-    localStorage.setItem('tempCustomColors', JSON.stringify(customColors));
+    try {
+        localStorage.setItem('tempCustomColors', JSON.stringify(customColors));
+    } catch (error) {
+        console.warn('Failed to save temporary custom colors:', error);
+    }
 }
 
 // Save custom colors to localStorage
 function saveCustomColors() {
     // Get the temporary custom colors or current values
     const tempColors = localStorage.getItem('tempCustomColors');
-    const currentColors = tempColors ? JSON.parse(tempColors) : collectCurrentCustomColors();
+    let currentColors;
     
-    // Save to localStorage    localStorage.setItem('customColors', JSON.stringify(currentColors));
-    localStorage.removeItem('tempCustomColors');
+    try {
+        currentColors = tempColors ? JSON.parse(tempColors) : collectCurrentCustomColors();
+    } catch (error) {
+        console.warn('Failed to parse temporary custom colors:', error);
+        currentColors = collectCurrentCustomColors();
+    }
+    
+    // Save to localStorage
+    try {
+        localStorage.setItem('customColors', JSON.stringify(currentColors));
+        localStorage.removeItem('tempCustomColors');
+    } catch (error) {
+        console.error('Failed to save custom colors:', error);
+        // Still try to remove temp colors even if save failed
+        try {
+            localStorage.removeItem('tempCustomColors');
+        } catch (removeError) {
+            console.warn('Failed to remove temporary colors:', removeError);
+        }
+    }
     
     // Show confirmation with custom notification
     import('./notification.js').then(Notification => {

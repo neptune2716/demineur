@@ -36,16 +36,19 @@ export function loadControllerSettings() {
 export function setupControllerListeners() {
     document.querySelectorAll('input[name="reveal"]').forEach(input => {
         input.addEventListener('change', function() {
-            if (this.checked) {
-                revealButton = this.value;
+            if (this.checked) {                revealButton = this.value;
                 // If both reveal and flag are set to the same button, switch the other one
                 if (revealButton === flagButton) {
                     const newFlagButton = revealButton === "left" ? "right" : "left";
                     flagButton = newFlagButton;
                     document.querySelector(`input[name="flag"][value="${newFlagButton}"]`).checked = true;
                 }
-                localStorage.setItem('revealButton', revealButton);
-                localStorage.setItem('flagButton', flagButton);
+                try {
+                    localStorage.setItem('revealButton', revealButton);
+                    localStorage.setItem('flagButton', flagButton);
+                } catch (error) {
+                    console.warn('Failed to save controller settings:', error);
+                }
             }
         });
     });
@@ -53,15 +56,18 @@ export function setupControllerListeners() {
     document.querySelectorAll('input[name="flag"]').forEach(input => {
         input.addEventListener('change', function() {
             if (this.checked) {
-                flagButton = this.value;
-                // If both reveal and flag are set to the same button, switch the other one
+                flagButton = this.value;                // If both reveal and flag are set to the same button, switch the other one
                 if (flagButton === revealButton) {
                     const newRevealButton = flagButton === "left" ? "right" : "left";
                     revealButton = newRevealButton;
                     document.querySelector(`input[name="reveal"][value="${newRevealButton}"]`).checked = true;
                 }
-                localStorage.setItem('flagButton', flagButton);
-                localStorage.setItem('revealButton', revealButton);
+                try {
+                    localStorage.setItem('flagButton', flagButton);
+                    localStorage.setItem('revealButton', revealButton);
+                } catch (error) {
+                    console.warn('Failed to save controller settings:', error);
+                }
             }
         });
     });

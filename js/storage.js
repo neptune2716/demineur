@@ -129,11 +129,8 @@ export function saveZenGameState() {
         zenLevel: State.zenLevel,
         firstClick: State.firstClick, // Preserve first click state
         inGameplayMode: true // Assume saving happens during gameplay or pause
-    };
-
-    localStorage.setItem(ZEN_GAME_STATE_KEY, JSON.stringify(zenGameState));
+    };    localStorage.setItem(ZEN_GAME_STATE_KEY, JSON.stringify(zenGameState));
     localStorage.setItem(HAS_SAVED_ZEN_GAME_KEY, 'true'); // Set the flag
-    console.log("Zen game state saved.");
 }
 
 /**
@@ -160,8 +157,6 @@ export function loadZenGameState() {
 /**
  * Clears the saved Zen Mode game state from localStorage.
  */
-export function clearZenGameState() {
-    localStorage.removeItem(ZEN_GAME_STATE_KEY);
+export function clearZenGameState() {    localStorage.removeItem(ZEN_GAME_STATE_KEY);
     localStorage.removeItem(HAS_SAVED_ZEN_GAME_KEY); // Clear the flag
-    console.log("Saved Zen game state cleared.");
 }

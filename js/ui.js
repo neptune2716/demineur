@@ -110,15 +110,20 @@ export function updateParticles() {
 export function openCustomModal() {
     // Load saved custom settings if they exist
     const savedCustomSettings = localStorage.getItem('customGameSettings');
-      if (savedCustomSettings) {
-        const settings = JSON.parse(savedCustomSettings);
-        const widthElement = document.getElementById('width');
-        const heightElement = document.getElementById('height');
-        const minesElement = document.getElementById('mines');
-        
-        if (widthElement) widthElement.value = settings.width;
-        if (heightElement) heightElement.value = settings.height;
-        if (minesElement) minesElement.value = settings.mines;
+    if (savedCustomSettings) {
+        try {
+            const settings = JSON.parse(savedCustomSettings);
+            const widthElement = document.getElementById('width');
+            const heightElement = document.getElementById('height');
+            const minesElement = document.getElementById('mines');
+            
+            if (widthElement) widthElement.value = settings.width;
+            if (heightElement) heightElement.value = settings.height;
+            if (minesElement) minesElement.value = settings.mines;
+        } catch (error) {
+            console.warn('Failed to parse custom game settings:', error);
+            // Continue with default values if parsing fails
+        }
     }
     
     if (customModalElement) {
@@ -168,13 +173,19 @@ export function startCustomGame() {
     // Update input values
     heightInput.value = rows;
     widthInput.value = columns;
-    minesInput.value = mineCount;
-      // Save custom settings to localStorage
+    minesInput.value = mineCount;    // Save custom settings to localStorage
     const customSettings = {
         width: columns,
         height: rows,
         mines: mineCount
-    };    localStorage.setItem('customGameSettings', JSON.stringify(customSettings));
+    };
+    
+    try {
+        localStorage.setItem('customGameSettings', JSON.stringify(customSettings));
+    } catch (error) {
+        console.warn('Failed to save custom game settings:', error);
+        // Continue without saving - game can still be played
+    }
     
     // Set game dimensions and start the game
     State.setGameDimensions(rows, columns, mineCount);
@@ -690,10 +701,8 @@ export function startZenLevel(level) {
     
     // Force update the indicator again to ensure it's visible
     setTimeout(() => {
-        const zenLevelIndicator = document.getElementById('zen-level-indicator');
-        if (zenLevelIndicator) {
+        const zenLevelIndicator = document.getElementById('zen-level-indicator');        if (zenLevelIndicator) {
             zenLevelIndicator.style.display = 'flex';
-            console.log('Forcing Zen Mode indicator visibility');
         }
     }, 100);
 }

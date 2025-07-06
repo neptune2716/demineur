@@ -87,11 +87,14 @@ function setupEventListeners() {
         // Update mode indicators when closing menu to open tutorial
         UI.updateModeIndicators();
         Tutorial.openTutorial();
-    });
-    // Tutorial show on startup checkbox
+    });    // Tutorial show on startup checkbox
     document.getElementById('show-tutorial-startup').addEventListener('change', function() {
         Audio.playSound('click-sound');
-        localStorage.setItem('dontShowTutorial', !this.checked);
+        try {
+            localStorage.setItem('dontShowTutorial', !this.checked);
+        } catch (error) {
+            console.warn('Failed to save tutorial preference:', error);
+        }
     });
     // Zen Mode button
     document.getElementById('zen-mode-button').addEventListener('click', function() {
