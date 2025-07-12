@@ -7,11 +7,13 @@ import * as State from './state.js';
 import * as Game from './game.js';
 import * as Audio from './audio.js';
 import * as Storage from './storage.js';
+import { UI_CONSTANTS, GAME_CONSTANTS, SELECTORS, CSS_CLASSES, ERROR_MESSAGES } from './constants.js';
+import { validateCustomGameSettings } from './validation.js';
 
 // Cache DOM elements
-export const gameBoardElement = document.getElementById('game-board');
-export const minesCounterElement = document.getElementById('mines-counter');
-export const timerElement = document.getElementById('timer');
+export const gameBoardElement = document.querySelector(SELECTORS.GAME_BOARD);
+export const minesCounterElement = document.querySelector(SELECTORS.MINES_COUNTER);
+export const timerElement = document.querySelector(SELECTORS.TIMER);
 export const customModalElement = document.getElementById('custom-modal');
 export const resultModalElement = document.getElementById('result-modal');
 export const zenStartModalElement = document.getElementById('zen-start-modal');
@@ -59,14 +61,13 @@ export function createParticles() {
     for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         particle.className = 'particle';
-        
-        // Randomize particle positions for immediate animation
-        particle.style.left = `${Math.random() * 100}%`;
-        particle.style.top = `${Math.random() * 100}%`;
+          // Randomize particle positions for immediate animation
+        particle.style.left = `${Math.random() * UI_CONSTANTS.PARTICLE_POSITION_MAX}%`;
+        particle.style.top = `${Math.random() * UI_CONSTANTS.PARTICLE_POSITION_MAX}%`;
         
         // Add some random transformations but no delays
         const randomScale = 0.5 + Math.random() * 1;
-        const randomOpacity = 0.3 + Math.random() * 0.7;
+        const randomOpacity = UI_CONSTANTS.PARTICLE_OPACITY_MIN + Math.random() * UI_CONSTANTS.PARTICLE_OPACITY_RANGE;
         const randomDuration = 15 + Math.random() * 20;
         
         particle.style.transform = `scale(${randomScale})`;
@@ -140,40 +141,41 @@ export function closeCustomModal() {
 
 // Handle custom game settings
 export function startCustomGame() {
-    const widthInput = document.getElementById('width');
-    const heightInput = document.getElementById('height');
-    const minesInput = document.getElementById('mines');
+    const widthInput = document.querySelector(SELECTORS.CUSTOM_WIDTH);
+    const heightInput = document.querySelector(SELECTORS.CUSTOM_HEIGHT);
+    const minesInput = document.querySelector(SELECTORS.CUSTOM_MINES);
     
     if (!widthInput || !heightInput || !minesInput) {
-        console.error('Custom game input elements not found');
+        console.error(ERROR_MESSAGES.ELEMENT_NOT_FOUND.replace('{selector}', 'custom game inputs'));
         return;
     }
     
-    const rows = Math.max(5, Math.min(500, parseInt(heightInput.value) || 10));
-    const columns = Math.max(5, Math.min(500, parseInt(widthInput.value) || 10));
+    // Validate all inputs using the validation module
+    const validation = validateCustomGameSettings(
+        widthInput.value, 
+        heightInput.value, 
+        minesInput.value, 
+        false // Not zen mode
+    );
     
-    // Calculate maximum mines allowed (30% of total tiles)
-    const totalTiles = rows * columns;
-    const maxAllowedMines = Math.floor(totalTiles * 0.3);
-    
-    // Get the requested mines and ensure it's within limits
-    let mineCount = Math.max(1, parseInt(minesInput.value) || 10);
-      // Check if mine count exceeds the 30% limit
-    if (mineCount > maxAllowedMines) {
-        // Show a custom warning notification instead of alert
+    // Show any validation errors
+    if (!validation.isValid && validation.errors.length > 0) {
         import('./notification.js').then(Notification => {
-            Notification.showWarning(`Maximum mines allowed is ${maxAllowedMines} (30% of total tiles)`);
+            validation.errors.forEach(error => {
+                Notification.showWarning(error);
+            });
         });
-        mineCount = maxAllowedMines;
     }
     
-    // Ensure we never exceed total tiles - 1 (need at least one safe cell)
-    mineCount = Math.min(mineCount, totalTiles - 1);
+    // Use corrected values
+    const { width: columns, height: rows, mines: mineCount } = validation.correctedSettings;
     
-    // Update input values
+    // Update input values to show corrected values
     heightInput.value = rows;
     widthInput.value = columns;
-    minesInput.value = mineCount;    // Save custom settings to localStorage
+    minesInput.value = mineCount;
+    
+    // Save custom settings to localStorage
     const customSettings = {
         width: columns,
         height: rows,
@@ -286,8 +288,7 @@ export function animateLevelUp() {
         return;
     }
     
-    zenLevelIndicator.classList.add('level-up-animation');
-      // Remove the animation class after it completes
+    zenLevelIndicator.classList.add('level-up-animation');      // Remove the animation class after it completes
     setTimeout(() => {
         if (zenLevelIndicator) {
             zenLevelIndicator.classList.remove('level-up-animation');
@@ -312,14 +313,13 @@ export function transitionToGameplay() {
     const gameBoard = document.querySelector('.game-board-container');
     if (gameBoard) {
         gameBoard.classList.add('centered');
-    }
-      // Show in-game UI
+    }      // Show in-game UI
     const inGameUI = document.getElementById('in-game-ui');
     setTimeout(() => {
         if (inGameUI) {
             inGameUI.classList.add('active');
         }
-    }, 300); // Small delay for sequential animation
+    }, UI_CONSTANTS.ANIMATION_DELAY_LONG_MS); // Small delay for sequential animation
     
     // Show/Hide New Game button based on mode
     const newGameInGameButton = document.getElementById('new-game-in-game');
@@ -504,11 +504,10 @@ export function updateMainPageStats() {
 export function renderBoard() {
     // Clear previous board
     gameBoardElement.innerHTML = '';
-    
-    // Calculate total cells and apply size class to the board for optimization
+      // Calculate total cells and apply size class to the board for optimization
     const totalCells = State.rows * State.columns;
-    gameBoardElement.dataset.boardSize = totalCells > 1000 ? 'large' : 
-                                         totalCells > 500 ? 'medium' : 'small';
+    gameBoardElement.dataset.boardSize = totalCells > UI_CONSTANTS.BOARD_SIZE_MEDIUM_MAX ? CSS_CLASSES.BOARD_SIZE_LARGE : 
+                                         totalCells > UI_CONSTANTS.BOARD_SIZE_SMALL_MAX ? CSS_CLASSES.BOARD_SIZE_MEDIUM : CSS_CLASSES.BOARD_SIZE_SMALL;
     
     // Create grid cells
     for (let y = 0; y < State.rows; y++) {
@@ -589,7 +588,7 @@ export function startTimer() {
     State.setTimerInterval(setInterval(() => {
         State.incrementTimer();
         timerElement.textContent = formatDuration(State.timer);
-    }, 1000));
+    }, UI_CONSTANTS.TIMER_INTERVAL_MS));
 }
 
 // Update mines counter
@@ -631,28 +630,23 @@ function getZenLevelConfig(level) {
     // Base config (Easy)
     let rows = 9;
     let columns = 9;
-    let mines = 10;
-
-    // Increase size every 5 levels
-    const sizeIncreases = Math.floor((level - 1) / 5);
+    let mines = 10;    // Increase size every 5 levels
+    const sizeIncreases = Math.floor((level - 1) / GAME_CONSTANTS.ZEN_SIZE_INCREASE_INTERVAL);
     rows += sizeIncreases;
     columns += sizeIncreases;
 
     // Increase mine density slightly every level, capping at ~20-25%
     // Start with ~12% density (10 / 81)
-    const baseDensity = 0.12;
-    const maxDensity = 0.22; // Cap density increase
-    const densityIncreasePerLevel = 0.002;
-    let currentDensity = baseDensity + (level - 1) * densityIncreasePerLevel;
-    currentDensity = Math.min(currentDensity, maxDensity);
+    let currentDensity = GAME_CONSTANTS.ZEN_BASE_DENSITY + (level - 1) * GAME_CONSTANTS.ZEN_DENSITY_INCREASE_PER_LEVEL;
+    currentDensity = Math.min(currentDensity, GAME_CONSTANTS.ZEN_MAX_DENSITY);
 
     mines = Math.floor(rows * columns * currentDensity);
 
     // Ensure minimum/maximum dimensions and mines
-    rows = Math.max(5, Math.min(rows, 50)); // Min 5x5, Max 50x50
-    columns = Math.max(5, Math.min(columns, 50));
-    mines = Math.max(5, Math.min(mines, Math.floor(rows * columns * 0.3))); // Min 5 mines, max 30% density
-    mines = Math.min(mines, rows * columns - 9); // Ensure at least a 3x3 safe start
+    rows = Math.max(GAME_CONSTANTS.MIN_BOARD_SIZE, Math.min(rows, GAME_CONSTANTS.MAX_BOARD_SIZE_ZEN));
+    columns = Math.max(GAME_CONSTANTS.MIN_BOARD_SIZE, Math.min(columns, GAME_CONSTANTS.MAX_BOARD_SIZE_ZEN));
+    mines = Math.max(GAME_CONSTANTS.ZEN_MIN_MINES, Math.min(mines, Math.floor(rows * columns * GAME_CONSTANTS.MAX_MINE_DENSITY)));
+    mines = Math.min(mines, rows * columns - GAME_CONSTANTS.SAFE_AREA_SIZE); // Ensure at least a 3x3 safe start
 
     return { rows, columns, mineCount: mines };
 }
@@ -698,13 +692,12 @@ export function startZenLevel(level) {
             newGameInGameButton.style.display = 'none';
         }
     }
-    
-    // Force update the indicator again to ensure it's visible
+      // Force update the indicator again to ensure it's visible
     setTimeout(() => {
         const zenLevelIndicator = document.getElementById('zen-level-indicator');        if (zenLevelIndicator) {
             zenLevelIndicator.style.display = 'flex';
         }
-    }, 100);
+    }, UI_CONSTANTS.ANIMATION_DELAY_SHORT_MS);
 }
 
 /**

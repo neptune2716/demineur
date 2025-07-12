@@ -8,6 +8,7 @@
  */
 
 import * as State from './state.js';
+import { GAME_CONSTANTS } from './constants.js';
 
 /* ------------------------------------------------------------------ */
 /* -----------------------  Helpers basiques  ----------------------- */
@@ -234,7 +235,7 @@ function repair(board, safeZone, safeSet) {
     /* 2) Case vide loin de firstClick */
     const first = safeZone[(safeZone.length / 2) | 0];
     const empties = [];
-    const far = d => Math.abs(d.x - first.x) + Math.abs(d.y - first.y) > 7;
+    const far = d => Math.abs(d.x - first.x) + Math.abs(d.y - first.y) > GAME_CONSTANTS.ZEN_SAFE_DISTANCE;
 
     for (let y = 0; y < State.rows; y++) {
       for (let x = 0; x < State.columns; x++) {

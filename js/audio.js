@@ -3,9 +3,11 @@
  * Handles all game sounds and audio settings
  */
 
+import { AUDIO_CONSTANTS, STORAGE_KEYS, DEFAULTS } from './constants.js';
+
 // Audio system variables
 export let audioEnabled = true;
-export let volumeLevel = 0.5;
+export let volumeLevel = DEFAULTS.VOLUME_LEVEL;
 export let backgroundAudio = null;
 export let currentBackgroundAudio = 'none';
 
@@ -18,7 +20,7 @@ let audioGainNode = null;
 const SOUND_EFFECTS = {
     'click': {
         id: 'click-sound',
-        fadeOut: 0.3,
+        fadeOut: AUDIO_CONSTANTS.FADE_OUT_DURATION,
         file: 'click.wav', // Updated file extension
         volumeAdjust: 1  // Increase click sound volume (was too quiet)
     },
@@ -32,7 +34,7 @@ const SOUND_EFFECTS = {
         id: 'win-sound',
         fadeOut: 1.0,
         file: 'win.wav', // Updated file extension
-        delay: 500      // Add 0.5s delay to avoid overlap with other sounds
+        delay: AUDIO_CONSTANTS.AMBIENT_DELAY_MS      // Add 0.5s delay to avoid overlap with other sounds
     },
     'lose': {
         id: 'lose-sound',
@@ -86,7 +88,7 @@ export function playSound(soundId) {
             if (!audioContext) {
                 // Apply volume adjustment if specified
                 const adjustedVolume = volumeLevel * (config.volumeAdjust || 1);
-                sound.volume = Math.min(1, adjustedVolume); // Ensure volume doesn't exceed 1
+                sound.volume = Math.min(AUDIO_CONSTANTS.MAX_VOLUME, adjustedVolume); // Ensure volume doesn't exceed 1
                 sound.currentTime = 0;
                 sound.play().catch(error => {
                     console.log("Audio play failed:", error);
@@ -119,7 +121,7 @@ export function playSound(soundId) {
             
             // Set current volume with adjustment if specified
             const adjustedVolume = volumeLevel * (config.volumeAdjust || 1);
-            gainNode.gain.value = Math.min(1, adjustedVolume); // Ensure volume doesn't exceed 1
+            gainNode.gain.value = Math.min(AUDIO_CONSTANTS.MAX_VOLUME, adjustedVolume); // Ensure volume doesn't exceed 1
             
             // Reset and play the sound
             sound.currentTime = 0;
@@ -134,7 +136,7 @@ export function playSound(soundId) {
                     gainNode.gain.linearRampToValueAtTime(adjustedVolume, audioContext.currentTime);
                     gainNode.gain.linearRampToValueAtTime(0, fadeOutTime);
                     
-                }, fadeStart * 1000);
+                }, fadeStart * AUDIO_CONSTANTS.FADE_START_MULTIPLIER);
             }).catch(error => {
                 console.log("Audio play failed:", error);
             });
@@ -190,10 +192,9 @@ export function loadAudioPreferences() {
         audioEnabled = localStorage.getItem('audioEnabled') === 'true';
         document.getElementById('sound-toggle').checked = audioEnabled;
     }
-    
-    if (localStorage.getItem('volumeLevel') !== null) {
-        volumeLevel = parseFloat(localStorage.getItem('volumeLevel'));
-        document.getElementById('volume').value = volumeLevel * 100;
+      if (localStorage.getItem(STORAGE_KEYS.VOLUME_LEVEL) !== null) {
+        volumeLevel = parseFloat(localStorage.getItem(STORAGE_KEYS.VOLUME_LEVEL));
+        document.querySelector(SELECTORS.VOLUME_SLIDER).value = volumeLevel * AUDIO_CONSTANTS.VOLUME_SCALE;
     }
     
     if (localStorage.getItem('backgroundAudio')) {
@@ -234,12 +235,11 @@ export function setupAudioListeners() {
         
         localStorage.setItem('audioEnabled', audioEnabled);
     });
-    
-    // Volume slider listener
-    document.getElementById('volume').addEventListener('input', function() {
-        volumeLevel = this.value / 100;
+      // Volume slider listener
+    document.querySelector(SELECTORS.VOLUME_SLIDER).addEventListener('input', function() {
+        volumeLevel = this.value / AUDIO_CONSTANTS.VOLUME_SCALE;
         updateVolume();
-        localStorage.setItem('volumeLevel', volumeLevel);
+        localStorage.setItem(STORAGE_KEYS.VOLUME_LEVEL, volumeLevel);
         
         // Play a soft click to demonstrate new volume level
         if (audioEnabled && this.value % 10 === 0) {

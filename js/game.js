@@ -10,6 +10,7 @@ import * as UI from './ui.js';
 import * as Config from './config.js';
 import { revealButton, flagButton, chordButton, autoFlagButton } from './controller.js';
 import { generateSolvableBoard } from './safe-board.js';
+import { GAME_CONSTANTS, ERROR_MESSAGES } from './constants.js';
 
 // Handle left-click on cell
 export function handleLeftClick(event) {
@@ -141,9 +142,8 @@ export function generateMines(safeX, safeY) {
 function generateSafeModeBoard(safeZone) {
     const success = generateSolvableBoard(safeZone);
     
-    if (!success) {
-        import('./notification.js').then(Notification => {
-            Notification.showInfo("Couldn't guarantee a fully solvable board - some guessing may be required");
+    if (!success) {        import('./notification.js').then(Notification => {
+            Notification.showInfo(ERROR_MESSAGES.SAFE_BOARD_GENERATION_FAILED);
         });
     }
 }
@@ -177,7 +177,7 @@ export function calculateAdjacentMines() {
 // Track cells to be revealed in batches for optimization
 let cellsToReveal = [];
 let revealingBatch = false;
-const BATCH_THRESHOLD = 20;
+const BATCH_THRESHOLD = GAME_CONSTANTS.BATCH_REVEAL_THRESHOLD;
 
 // Reveal a cell with optimization for large boards
 export function revealCell(x, y) {

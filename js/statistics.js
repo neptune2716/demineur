@@ -3,6 +3,8 @@
  * Manages game statistics, tracking progress and achievements
  */
 
+import { STATS_CONSTANTS, STORAGE_KEYS } from './constants.js';
+
 // Default statistics structure
 const DEFAULT_STATS = {
     games: {
@@ -75,8 +77,7 @@ const DEFAULT_STATS = {
         // Streak achievements
         weekStreak: false,       // Play for 7 consecutive days
         monthStreak: false,      // Play for 30 consecutive days
-        
-        // Milestone achievements
+          // Milestone achievements
         hundredGames: false,     // Play 100 games
         thousandGames: false,    // Play 1000 games
         fiftyPercentWinRate: false, // Achieve 50% win rate after 20+ games
@@ -112,11 +113,11 @@ const DEFAULT_STATS = {
     }
 };
 
-// Speed thresholds for speedRunner achievements (in seconds)
+// Speed thresholds for speedRunner achievements (in seconds) - Using constants
 const SPEED_THRESHOLDS = {
-    easy: 30,
-    medium: 120,
-    hard: 300
+    easy: STATS_CONSTANTS.SPEED_THRESHOLD_EASY,
+    medium: STATS_CONSTANTS.SPEED_THRESHOLD_MEDIUM,
+    hard: STATS_CONSTANTS.SPEED_THRESHOLD_HARD
 };
 
 // Cache for current statistics
@@ -129,7 +130,7 @@ let currentStats = null;
 export function loadStatistics() {
     if (currentStats) return currentStats;
     
-    const savedStats = localStorage.getItem('gameStatistics');
+    const savedStats = localStorage.getItem(STORAGE_KEYS.STATISTICS);
     if (savedStats) {
         try {
             currentStats = JSON.parse(savedStats);
@@ -150,7 +151,7 @@ export function loadStatistics() {
  */
 export function saveStatistics() {
     if (!currentStats) return;
-    localStorage.setItem('gameStatistics', JSON.stringify(currentStats));
+    localStorage.setItem(STORAGE_KEYS.STATISTICS, JSON.stringify(currentStats));
 }
 
 /**
@@ -251,19 +252,17 @@ export function recordGameResult(isWin, value, difficulty, gameConfig = null, ga
             if (difficulty === 'easy' || difficulty === 'medium' || difficulty === 'hard') {
                 if (!Array.isArray(stats.gameHistory[difficulty])) {
                     stats.gameHistory[difficulty] = [];
-                }
-                stats.gameHistory[difficulty].push(record);
-                if (stats.gameHistory[difficulty].length > 100) {
-                    stats.gameHistory[difficulty] = stats.gameHistory[difficulty].slice(-100);
+                }                stats.gameHistory[difficulty].push(record);
+                if (stats.gameHistory[difficulty].length > STATS_CONSTANTS.MAX_GAME_HISTORY_PER_DIFFICULTY) {
+                    stats.gameHistory[difficulty] = stats.gameHistory[difficulty].slice(-STATS_CONSTANTS.MAX_GAME_HISTORY_PER_DIFFICULTY);
                 }
             } else if (difficulty === 'custom' && gameConfig) {
                 const configKey = `${gameConfig.rows}_${gameConfig.columns}_${gameConfig.mines}`;
                 if (!stats.gameHistory.custom[configKey]) {
                     stats.gameHistory.custom[configKey] = [];
-                }
-                stats.gameHistory.custom[configKey].push(record);
-                if (stats.gameHistory.custom[configKey].length > 100) {
-                    stats.gameHistory.custom[configKey] = stats.gameHistory.custom[configKey].slice(-100);
+                }                stats.gameHistory.custom[configKey].push(record);
+                if (stats.gameHistory.custom[configKey].length > STATS_CONSTANTS.MAX_GAME_HISTORY_PER_DIFFICULTY) {
+                    stats.gameHistory.custom[configKey] = stats.gameHistory.custom[configKey].slice(-STATS_CONSTANTS.MAX_GAME_HISTORY_PER_DIFFICULTY);
                 }
             }
 
@@ -301,34 +300,33 @@ export function recordGameResult(isWin, value, difficulty, gameConfig = null, ga
     }
     
     stats.streaks.lastPlayed = now.toISOString();
-    
-    // Check win-based achievements
+      // Check win-based achievements
     if (isWin && difficulty !== 'zen') { // Only count normal mode wins for these
         if (!stats.achievements.firstWin) { stats.achievements.firstWin = true; newAchievements.push('firstWin'); }
-        if (stats.games.won >= 10 && !stats.achievements.tenWins) { stats.achievements.tenWins = true; newAchievements.push('tenWins'); }
-        if (stats.games.won >= 50 && !stats.achievements.fiftyWins) { stats.achievements.fiftyWins = true; newAchievements.push('fiftyWins'); }
-        if (stats.games.won >= 100 && !stats.achievements.hundredWins) { stats.achievements.hundredWins = true; newAchievements.push('hundredWins'); }
+        if (stats.games.won >= STATS_CONSTANTS.ACHIEVEMENT_TEN_WINS && !stats.achievements.tenWins) { stats.achievements.tenWins = true; newAchievements.push('tenWins'); }
+        if (stats.games.won >= STATS_CONSTANTS.ACHIEVEMENT_FIFTY_WINS && !stats.achievements.fiftyWins) { stats.achievements.fiftyWins = true; newAchievements.push('fiftyWins'); }
+        if (stats.games.won >= STATS_CONSTANTS.ACHIEVEMENT_HUNDRED_WINS && !stats.achievements.hundredWins) { stats.achievements.hundredWins = true; newAchievements.push('hundredWins'); }
         
         // Check mastery achievements
-        if (difficulty === 'easy' && stats.difficultyStats.easy.won >= 20 && !stats.achievements.easyMaster) { stats.achievements.easyMaster = true; newAchievements.push('easyMaster'); }
-        if (difficulty === 'medium' && stats.difficultyStats.medium.won >= 15 && !stats.achievements.mediumMaster) { stats.achievements.mediumMaster = true; newAchievements.push('mediumMaster'); }
-        if (difficulty === 'hard' && stats.difficultyStats.hard.won >= 10 && !stats.achievements.hardMaster) { stats.achievements.hardMaster = true; newAchievements.push('hardMaster'); }
+        if (difficulty === 'easy' && stats.difficultyStats.easy.won >= STATS_CONSTANTS.ACHIEVEMENT_EASY_MASTER && !stats.achievements.easyMaster) { stats.achievements.easyMaster = true; newAchievements.push('easyMaster'); }
+        if (difficulty === 'medium' && stats.difficultyStats.medium.won >= STATS_CONSTANTS.ACHIEVEMENT_MEDIUM_MASTER && !stats.achievements.mediumMaster) { stats.achievements.mediumMaster = true; newAchievements.push('mediumMaster'); }
+        if (difficulty === 'hard' && stats.difficultyStats.hard.won >= STATS_CONSTANTS.ACHIEVEMENT_HARD_MASTER && !stats.achievements.hardMaster) { stats.achievements.hardMaster = true; newAchievements.push('hardMaster'); }
     }
     
     // Check milestone achievements (apply to all modes including Zen losses)
-    if (stats.games.played >= 100 && !stats.achievements.hundredGames) { stats.achievements.hundredGames = true; newAchievements.push('hundredGames'); }
-    if (stats.games.played >= 1000 && !stats.achievements.thousandGames) { stats.achievements.thousandGames = true; newAchievements.push('thousandGames'); }
+    if (stats.games.played >= STATS_CONSTANTS.ACHIEVEMENT_HUNDRED_WINS && !stats.achievements.hundredGames) { stats.achievements.hundredGames = true; newAchievements.push('hundredGames'); }
+    if (stats.games.played >= STATS_CONSTANTS.ACHIEVEMENT_THOUSAND_WINS && !stats.achievements.thousandGames) { stats.achievements.thousandGames = true; newAchievements.push('thousandGames'); }
     
     // Check win rate achievements (only for normal modes)
-    if (stats.games.played >= 20 && difficulty !== 'zen') {
+    if (stats.games.played >= STATS_CONSTANTS.ACHIEVEMENT_MIN_GAMES_FOR_WINRATE && difficulty !== 'zen') {
         const winRate = (stats.games.won / stats.games.played) * 100;
-        if (winRate >= 50 && !stats.achievements.fiftyPercentWinRate) { stats.achievements.fiftyPercentWinRate = true; newAchievements.push('fiftyPercentWinRate'); }
-        if (winRate >= 75 && !stats.achievements.seventyFivePercentWinRate) { stats.achievements.seventyFivePercentWinRate = true; newAchievements.push('seventyFivePercentWinRate'); }
+        if (winRate >= STATS_CONSTANTS.ACHIEVEMENT_FIFTY_PERCENT_WINRATE && !stats.achievements.fiftyPercentWinRate) { stats.achievements.fiftyPercentWinRate = true; newAchievements.push('fiftyPercentWinRate'); }
+        if (winRate >= STATS_CONSTANTS.ACHIEVEMENT_SEVENTY_FIVE_PERCENT_WINRATE && !stats.achievements.seventyFivePercentWinRate) { stats.achievements.seventyFivePercentWinRate = true; newAchievements.push('seventyFivePercentWinRate'); }
     }
     
     // Check daily streak achievements
-    if (stats.streaks.dailyStreak >= 7 && !stats.achievements.weekStreak) { stats.achievements.weekStreak = true; newAchievements.push('weekStreak'); }
-    if (stats.streaks.dailyStreak >= 30 && !stats.achievements.monthStreak) { stats.achievements.monthStreak = true; newAchievements.push('monthStreak'); }
+    if (stats.streaks.dailyStreak >= STATS_CONSTANTS.ACHIEVEMENT_WEEK_STREAK && !stats.achievements.weekStreak) { stats.achievements.weekStreak = true; newAchievements.push('weekStreak'); }
+    if (stats.streaks.dailyStreak >= STATS_CONSTANTS.ACHIEVEMENT_MONTH_STREAK && !stats.achievements.monthStreak) { stats.achievements.monthStreak = true; newAchievements.push('monthStreak'); }
     
     saveStatistics();
     
